@@ -127,7 +127,7 @@ decl[, plab:=factor(PLAB[pollutant], levels=unname(PLAB[POLLS]))]
 g2 <- ggplot(decl[gap=="Black - White"], aes(plab, val, fill=channel)) +
   geom_col(position="dodge") + geom_hline(yintercept=0, linewidth=.3) +
   scale_fill_manual(values=c(cleanup="#2166ac", sorting="#b2182b"),
-                    labels=c("In-place cleanup","Migration (sorting)"), name=NULL) +
+                    labels=c("In-place cleanup","Population redistribution (sorting)"), name=NULL) +
   labs(title="What changed the Black-white exposure gap: cleanup vs migration, by pollutant",
        subtitle="Shift-share decomposition of the 2011-2019 change in the Black-white exposure gap",
        x=NULL, y="Contribution to change in the gap") +

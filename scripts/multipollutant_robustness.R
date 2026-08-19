@@ -118,16 +118,17 @@ aff <- rbindlist(lapply(POLLS, function(p){
   d <- oy[!is.na(get(paste0("re_",p))) & !is.na(get(paste0("o_",p)))]
   f0 <- as.formula(paste0("re_",p," ~ grp + ns(o_",p,",4) + log(o_inc0) + o_pov + o_bach | o_cbsa + year"))
   f1 <- as.formula(paste0("re_",p," ~ grp + ns(o_",p,",4) + log(o_inc0) + o_pov + o_bach + log(dest_homeval) + log(dest_rent) | o_cbsa + year"))
-  m0 <- feols(f0, d, weights=~out_flow, cluster=~o_cbsa)
-  m1 <- feols(f1, d[dest_homeval>0 & dest_rent>0], weights=~out_flow, cluster=~o_cbsa)
+  d_aff <- d[dest_homeval>0 & dest_rent>0]        # COMMON sample: both models, same rows
+  m0 <- feols(f0, d_aff, weights=~out_flow, cluster=~o_cbsa)
+  m1 <- feols(f1, d_aff, weights=~out_flow, cluster=~o_cbsa)
   rbindlist(lapply(c("Majority Black","Majority Hispanic"), function(g){
     b0<-gcoef(m0,paste0("grp",g)); b1<-gcoef(m1,paste0("grp",g))
     data.table(pollutant=p, group=sub("Majority ","",g), gap_base=b0[[1]], se_base=b0[[2]],
-               gap_housing=b1[[1]], pct_explained=100*(b0[[1]]-b1[[1]])/b0[[1]]) }))
+               gap_housing=b1[[1]], pct_attenuation_housing=100*(b0[[1]]-b1[[1]])/b0[[1]]) }))
 }))
 fwrite(aff, file.path(out_dir,"multipollutant_affordability.csv"))
 cat("\n=== (A) AFFORDABILITY across pollutants (% of gap explained by destination housing values) ===\n")
-print(aff[, .(pollutant, group, gap_base=round(gap_base,4), pct_explained=round(pct_explained,1))])
+print(aff[, .(pollutant, group, gap_base=round(gap_base,4), pct_attenuation_housing=round(pct_attenuation_housing,1))])
 
 # ============================================================
 # (B) SELECTION per pollutant
@@ -186,7 +187,7 @@ print(sgi[, .(pollutant, black_x_seg=round(black_x_seg,4), se=round(se,4), p=sig
 # ============================================================
 ordp <- intersect(c("no2","bc","om","pm25","no3","so4","ozone","wildfire_pm25"), POLLS)
 plab <- function(d) d[, pl:=factor(PLAB[pollutant], levels=rev(unname(PLAB[ordp])))]
-g1 <- ggplot(plab(copy(aff)), aes(pct_explained, pl, fill=group)) + geom_col(position="dodge") +
+g1 <- ggplot(plab(copy(aff)), aes(pct_attenuation_housing, pl, fill=group)) + geom_col(position="dodge") +
   geom_vline(xintercept=0, linewidth=.3) +
   scale_fill_manual(values=c(Black="#1b7837",Hispanic="#762a83"), name=NULL) +
   labs(title="Destination housing values explain little of the gap for any pollutant",

@@ -169,5 +169,5 @@ p2 <- ggplot(bl, aes(pm_q, minority_share, fill=group)) + geom_col(position="dod
 ggsave(file.path(fig_dir,"fig8_sorting_by_pm25_quintile.png"), p2, width=8, height=4.2, dpi=200)
 
 cat("\nDONE. Siting + sorting outputs and figures in ", out_dir, "\n", sep="")
-cat("Read alongside the v3 shift-share: sorting = demographic change via migration;\n",
+cat("Read alongside the v3 shift-share: sorting = population redistribution across neighborhoods (migration, plus births, deaths, and other demographic change);\n",
     "cleanup = pollution dynamics. Together they quantify which channel maintains the disparity.\n", sep="")

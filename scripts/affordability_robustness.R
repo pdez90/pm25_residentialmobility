@@ -177,13 +177,14 @@ if (!is.finite(maxgap) || maxgap > 1e-5)
 # ============================================================
 # B. PROBABILITY of reaching a cleaner neighborhood
 # ============================================================
-pc0 <- feols(as.formula(paste0("share_cleaner ~ grp",ctrl," | o_cbsa + year")), oy, weights=~out_flow, cluster=~o_cbsa)
-pc1 <- feols(as.formula(paste0("share_cleaner ~ grp",ctrl," + log(dest_homeval) + mean_dist | o_cbsa + year")), oy[dest_homeval>0], weights=~out_flow, cluster=~o_cbsa)
+oy_prob <- oy[dest_homeval > 0 & is.finite(mean_dist)]   # COMMON sample for both models
+pc0 <- feols(as.formula(paste0("share_cleaner ~ grp",ctrl," | o_cbsa + year")), oy_prob, weights=~out_flow, cluster=~o_cbsa)
+pc1 <- feols(as.formula(paste0("share_cleaner ~ grp",ctrl," + log(dest_homeval) + mean_dist | o_cbsa + year")), oy_prob, weights=~out_flow, cluster=~o_cbsa)
 prob <- rbindlist(lapply(c("grpMajority Black","grpMajority Hispanic"), function(t){
   data.table(group=sub("grpMajority ","",t), gap_base=bcoef(pc0,t), gap_plus_afford=bcoef(pc1,t),
-             pct_explained=round(100*(bcoef(pc0,t)-bcoef(pc1,t))/bcoef(pc0,t),1)) }), fill=TRUE)
+             pct_attenuation=round(100*(bcoef(pc0,t)-bcoef(pc1,t))/bcoef(pc0,t),1)) }), fill=TRUE)
 fwrite(prob, file.path(out_dir,"prob_cleaner_decomposition.csv"))
-cat("\n=== PROBABILITY of reaching cleaner air: racial gap and share explained by affordability+distance ===\n"); print(prob)
+cat("\n=== PROBABILITY of reaching cleaner air: gap and attenuation after adjusting for destination cost + distance (common sample; descriptive) ===\n"); print(prob)
 
 # ============================================================
 # C. SELECTION robustness: within-CBSA, short-distance, +distance control

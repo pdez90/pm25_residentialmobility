@@ -137,7 +137,7 @@ cat("\n=== Change in the exposure GAP: cleanup vs sorting ===\n"); print(gapdec)
 
 dgl <- melt(dg[, .(group, cleanup, sorting)], id.vars="group", variable.name="channel", value.name="dpm")
 p2 <- ggplot(dgl, aes(group, dpm, fill=channel)) + geom_col(position="dodge") + geom_hline(yintercept=0, linewidth=.4) +
-  scale_fill_manual(values=c(cleanup="#4d4d4d", sorting="#d6604d"), labels=c("In-place cleanup","Migration (sorting)")) +
+  scale_fill_manual(values=c(cleanup="#4d4d4d", sorting="#d6604d"), labels=c("In-place cleanup","Population redistribution (sorting)")) +
   labs(title="In-place cleanup, not migration, drove the PM2.5 decline (2011-2019)",
        x=NULL, y=expression(Delta~PM[2.5]~", "~mu*g/m^3), fill=NULL) + theme_pub
 ggsave(file.path(fig_dir,"fig2_decomposition.png"), p2, width=7.5, height=4.3, dpi=200)
