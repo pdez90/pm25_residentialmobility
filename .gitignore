@@ -1,0 +1,23 @@
+# data and outputs are not redistributed
+*.csv
+*.rds
+*.tif
+*.nc
+*.xls
+*.xlsx
+*.zip
+figures/
+logs/
+outputs/
+pollution_bg/
+ipums/
+naaqs/
+
+# R session cruft
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# OS
+.DS_Store
