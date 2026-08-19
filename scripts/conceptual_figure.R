@@ -76,3 +76,51 @@ p <- ggplot() +
 
 ggsave(file.path(fig_dir, "fig_conceptual_signature.png"), p, width=10, height=7.2, dpi=200)
 message("DONE. Conceptual figure: ", file.path(fig_dir, "fig_conceptual_signature.png"))
+
+# ============================================================
+# GRAPHICAL ABSTRACT (separate file; not a manuscript figure)
+# ------------------------------------------------------------
+# IOP displays graphical abstracts at 500 px wide (120 px on the issue
+# page) and asks for >= 12 pt type, so this is a deliberately reduced
+# version of the conceptual figure: three beats, large text, wide format.
+# Upload separately as a Source File named with the "GA" prefix; do NOT
+# place it in the manuscript PDF or the SI.
+#
+# Output: figures/GA_conceptual_signature.png  (2400 x 1110 px)
+# ============================================================
+ga <- rbindlist(list(
+  data.table(x=1.85, w=2.7, fill=GREENF, border=GREEN, tcol="black",
+             label="Regulation cleaned\nthe air in place"),
+  data.table(x=5.00, w=2.7, fill=REDF,   border=RED,   tcol="black",
+             label="Mobility reallocated\nit unequally"),
+  data.table(x=8.15, w=2.7, fill=NAVY,   border=NAVY,  tcol="white",
+             label="Absolute gaps closed\nRelative gaps did not")
+))
+ga[, `:=`(y=2.45, h=1.75)]
+ga_arrows <- data.table(x=c(3.25, 6.40), xend=c(3.60, 6.75), y=2.45, yend=2.45)
+
+pga <- ggplot() +
+  # three panels
+  geom_rect(data=ga, aes(xmin=x-w/2, xmax=x+w/2, ymin=y-h/2, ymax=y+h/2),
+            fill=ga$fill, color=ga$border, linewidth=1.1) +
+  geom_text(data=ga, aes(x=x, y=y, label=label), color=ga$tcol,
+            size=5.4, lineheight=1.05, fontface="bold") +
+  # connectors
+  geom_segment(data=ga_arrows, aes(x=x, xend=xend, y=y, yend=yend),
+               arrow=arrow(length=unit(.16,"in"), type="closed"),
+               linewidth=1.0, color="grey35") +
+  # headline and the single key number
+  annotate("text", x=5, y=4.15, label="Residential mobility reproduces environmental-opportunity inequality",
+           size=5.4, fontface="bold", color=NAVY) +
+  annotate("text", x=5, y=3.55,
+           label="National block-group migration flows \u00d7 eight pollutants, 2011\u20132019",
+           size=4.6, color="grey25") +
+  annotate("text", x=5, y=0.80,
+           label="Movers from majority-Black neighborhoods reached destinations 0.118 \u00b5g m\u207b\u00b3\ndirtier than comparable white-origin movers leaving equally polluted places",
+           size=4.6, fontface="bold", color=RED, lineheight=1.15) +
+  coord_cartesian(xlim=c(0.3, 9.7), ylim=c(0.1, 4.6), expand=FALSE) +
+  theme_void()
+
+ggsave(file.path(fig_dir, "GA_conceptual_signature.png"), pga,
+       width=8, height=3.7, dpi=300)
+cat("Graphical abstract written: ", file.path(fig_dir, "GA_conceptual_signature.png"), "\n", sep="")
