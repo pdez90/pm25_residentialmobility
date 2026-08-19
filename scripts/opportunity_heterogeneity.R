@@ -57,7 +57,8 @@ acs <- merge(acs, unique(xw,by="county"), by="county", all.x=TRUE); acs[is.na(cb
 acs <- unique(acs, by=c("geoid_bg","year"))
 
 # ============================================================
-# (2) OPPORTUNITY SET: share of CLEAN metro neighborhoods AFFORDABLE to origin
+# (2) OPPORTUNITY SET: share of ALL metro neighborhoods that are BOTH clean and
+#     affordable to the origin (denominator is every BG in the metro-year, not clean BGs)
 # ============================================================
 a2 <- acs[!is.na(pm25) & !is.na(med_home_value) & !is.na(med_hh_income) & med_hh_income>0]
 a2[, opp_share := {
