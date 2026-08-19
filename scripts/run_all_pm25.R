@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # MASTER DRIVER (reproducible): PM2.5 x MIGRATION analysis, end to end
 # ------------------------------------------------------------
@@ -11,8 +17,9 @@
 #   * any failure STOPS the run with a clear message (nothing silently skipped;
 #     a stage you don't want is turned OFF via its switch)
 #
-# Usage:  Rscript scripts/run_all_pm25.R
-# Outputs: /Users/priyanka/MIGRATE_dir/pm25_avoidance_lag3_olag1/
+# Usage:  Rscript run_main.R   (paper pipeline, no credentials required)
+#         Rscript run_full.R   (adds ACS microdata replication + exploratory NAAQS)
+# Outputs: $MIGRATE_DATA_DIR/pm25_avoidance_lag3_olag1/
 #   logs/run_<timestamp>.log        full console+message log
 #   logs/manifest_<timestamp>.csv   file, bytes, nrow, md5 for every output
 #   logs/sessioninfo_<timestamp>.txt sessionInfo()
@@ -26,8 +33,8 @@
 # missing the run STOPS (they auto-build from raw inputs when possible).
 # ============================================================
 
-scripts_dir <- "/Users/priyanka/MIGRATE_dir/scripts"
-base_dir    <- "/Users/priyanka/MIGRATE_dir"
+scripts_dir <- file.path(repo_root, "scripts")
+base_dir    <- migrate_data_dir()
 poll_dir    <- file.path(base_dir, "pollution_bg")
 out_dir     <- file.path(base_dir, "pm25_avoidance_lag3_olag1")
 log_dir     <- file.path(out_dir, "logs")
@@ -41,8 +48,8 @@ RUN_UNCERTAINTY     <- TRUE     # 0d PM2.5 uncertainty
 RUN_DIAGNOSTICS     <- TRUE     # 5-6 maps + sankey, and 11 verification
 RUN_ROBUSTNESS      <- TRUE     # 7 affordability / selection / ME / mean reversion
 RUN_OPPORTUNITY     <- TRUE     # 8 opportunity set + segregation + affordability+
-RUN_VALIDATION      <- TRUE     # 9 ACS household validation (needs ipums/usa_acs_migration.csv)
-RUN_QUASIEXPERIMENT <- TRUE     # 10 NAAQS (auto-builds from EPA_greenbook/phistory.xls)
+RUN_VALIDATION      <- as.logical(Sys.getenv("MIGRATE_RUN_VALIDATION", "FALSE"))   # 9 ACS microdata replication (needs IPUMS extract)
+RUN_QUASIEXPERIMENT <- as.logical(Sys.getenv("MIGRATE_RUN_QUASIEXPERIMENT", "FALSE")) # 10 NAAQS, exploratory (needs EPA Green Book)
 FORCE_REEXTRACT     <- FALSE    # re-run heavy extraction even if a panel exists
 SEED                <- 20260709 # fixed seed for reproducible randomness
 
@@ -186,9 +193,9 @@ if (RUN_MULTIPOLLUTANT) { run_ses("multipollutant_disparity.R")
   # ============================================================
   if (RUN_QUASIEXPERIMENT) {
     gb <- file.path(base_dir,"naaqs","greenbook_nonattainment.csv")
-    if (!exists_ne(gb) && any(file.exists(c("/Users/priyanka/EPA_greenbook/phistory.xls", file.path(base_dir,"naaqs","phistory.xls")))))
+    if (!exists_ne(gb) && any(file.exists(c(greenbook_xls(), file.path(base_dir,"naaqs","phistory.xls")))))
       run_sub("build_greenbook.R")
-    if (!exists_ne(gb)) stop("STAGE 10 ON but ", gb, " missing and no phistory.xls to build it. Put phistory.xls in /Users/priyanka/EPA_greenbook, or set RUN_QUASIEXPERIMENT <- FALSE.")
+    if (!exists_ne(gb)) stop("STAGE 10 ON but ", gb, " missing and no phistory.xls to build it. Set EPA_GREENBOOK_XLS to your Green Book phistory.xls, or leave the optional stages off (run_main.R).")
     run_ses("naaqs_nonattainment.R"); assert("10 NAAQS", O("naaqs_capture_origin.csv"))
   }
 

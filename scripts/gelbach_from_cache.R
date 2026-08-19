@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # Quick Gelbach decomposition from the cached origin-year panel.
 # Reproduces a0 (base) / a2 (full) / auxiliary regressions on the SAME common
@@ -6,7 +12,7 @@
 # Runs in seconds -- no MIGRATE re-aggregation. Self-checks the identity.
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(fixest); library(splines) })
-out_dir <- "/Users/priyanka/MIGRATE_dir/pm25_avoidance_lag3_olag1"
+out_dir <- file.path(migrate_data_dir(), "pm25_avoidance_lag3_olag1")
 oy <- fread(file.path(out_dir,"origin_year_affordability.csv"))
 oy[, grp := relevel(factor(o_race), ref="Majority white (NH)")]
 ctrl <- "+ ns(orig_pm25,4) + log(o_inc0) + o_pov + o_bach"

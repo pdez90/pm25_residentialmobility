@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # CONCEPTUAL SIGNATURE FIGURE
 # ------------------------------------------------------------
@@ -10,7 +16,7 @@
 # Output: pm25_avoidance_lag3_olag1/figures/fig_conceptual_signature.png
 # ============================================================
 suppressPackageStartupMessages({ library(ggplot2); library(data.table); library(stringr) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 fig_dir  <- file.path(base_dir, "pm25_avoidance_lag3_olag1", "figures")
 dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 

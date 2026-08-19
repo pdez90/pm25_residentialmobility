@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # BUILD the PUMA -> MIGPUMA crosswalk (2010 vintage)
 # ------------------------------------------------------------
@@ -11,7 +17,7 @@
 suppressPackageStartupMessages({ library(data.table); library(stringr) })
 if (!requireNamespace("readxl", quietly=TRUE)) install.packages("readxl", repos="https://cloud.r-project.org")
 library(readxl)
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 ip_dir <- file.path(base_dir,"ipums"); dir.create(ip_dir, showWarnings=FALSE, recursive=TRUE)
 dest <- file.path(ip_dir,"puma_migpuma_xwalk.csv")
 raw  <- file.path(ip_dir,"puma_migpuma1_pwpuma00_2010.xls")

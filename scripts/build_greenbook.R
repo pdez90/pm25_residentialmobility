@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # BUILD the EPA Green Book nonattainment file for the NAAQS stage
 # ------------------------------------------------------------
@@ -18,19 +24,19 @@
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr) })
 STANDARD <- "2012"
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 nd <- file.path(base_dir,"naaqs"); dir.create(nd, showWarnings=FALSE, recursive=TRUE)
 dest <- file.path(nd,"greenbook_nonattainment.csv")
 
 # ---- locate phistory.xls (your EPA_greenbook folder first), else download ----
-cands <- c("/Users/priyanka/EPA_greenbook/phistory.xls", file.path(nd,"phistory.xls"))
+cands <- c(greenbook_xls(), file.path(nd,"phistory.xls"))
 src <- cands[file.exists(cands)][1]
 if (is.na(src)) {
   src <- file.path(nd,"phistory.xls")
   ok <- FALSE
   try({ download.file("https://www3.epa.gov/airquality/greenbook/downld/phistory.xls", src, quiet=TRUE, mode="wb")
         ok <- file.exists(src) && file.info(src)$size>5000 }, silent=TRUE)
-  if (!ok) stop("phistory.xls not found in /Users/priyanka/EPA_greenbook or ", nd,
+  if (!ok) stop("phistory.xls not found at $EPA_GREENBOOK_XLS or ", nd,
                 " and could not be downloaded. Place the file and re-run.")
 }
 if (!requireNamespace("readxl", quietly=TRUE)) install.packages("readxl", repos="https://cloud.r-project.org")

@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # BLOCK-GROUP PM2.5 UNCERTAINTY (WashU V6.NA AbsoluteUncertainty)
 # ------------------------------------------------------------
@@ -10,8 +16,8 @@
 # ============================================================
 suppressPackageStartupMessages({ library(sf); library(data.table); library(terra); library(exactextractr); library(stringr); library(tigris) })
 options(tigris_use_cache=TRUE); sf::sf_use_s2(FALSE)
-base_dir <- "/Users/priyanka/MIGRATE_dir"
-unc_dir  <- "/Users/priyanka/Annual_uncertainty_PM25/PM25"
+base_dir <- migrate_data_dir()
+unc_dir  <- file.path(pm25_unc_dir(), "PM25")
 out_dir  <- file.path(base_dir,"pollution_bg"); cache_dir <- file.path(out_dir,"cache_unc")
 dir.create(cache_dir, showWarnings=FALSE, recursive=TRUE)
 terraOptions(tempdir=file.path(out_dir,"_terra_tmp_unc"), memfrac=0.6, progress=0)

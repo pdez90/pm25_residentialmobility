@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # BLOCK-GROUP AREA vs EXPOSURE-GRID RESOLUTION
 # ------------------------------------------------------------
@@ -19,7 +25,7 @@
 suppressPackageStartupMessages({ library(data.table); library(stringr); library(tigris); library(sf) })
 options(tigris_use_cache = TRUE)
 
-base_dir <- Sys.getenv("MIGRATE_DIR", unset="/Users/priyanka/MIGRATE_dir")
+base_dir <- Sys.getenv("MIGRATE_DIR", unset=migrate_data_dir())
 poll_dir <- file.path(base_dir, "pollution_bg")
 gent_dir <- file.path(base_dir, "acs_gentrification")
 out_dir  <- file.path(base_dir, "pm25_avoidance_lag3_olag1")

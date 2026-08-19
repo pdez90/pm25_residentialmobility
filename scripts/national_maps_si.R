@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # SUPPLEMENTARY NATIONAL MAPS
 # Choropleth maps of every quantity used in the paper:
@@ -27,7 +33,7 @@ if (!requireNamespace("tigris", quietly = TRUE)) install.packages("tigris")
 # ----------------------------
 # Paths & switches
 # ----------------------------
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 gent_dir <- file.path(base_dir, "acs_gentrification")
 change_lag <- 3
 origin_lag <- 1

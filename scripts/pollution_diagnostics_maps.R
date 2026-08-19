@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # POLLUTION JOIN DIAGNOSTICS + NATIONAL MAPS
 # ------------------------------------------------------------
@@ -14,7 +20,7 @@
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr); library(sf); library(tigris); library(ggplot2) })
 options(tigris_use_cache=TRUE); sf::sf_use_s2(FALSE)
-base_dir <- "/Users/priyanka/MIGRATE_dir"; mig_dir <- base_dir
+base_dir <- migrate_data_dir(); mig_dir <- base_dir
 out_dir <- file.path(base_dir,"pm25_avoidance_lag3_olag1"); fig_dir <- file.path(out_dir,"figures"); map_dir <- file.path(fig_dir,"maps")
 dir.create(map_dir, showWarnings=FALSE, recursive=TRUE)
 pad_bg <- function(x) str_pad(as.character(x),12,pad="0")

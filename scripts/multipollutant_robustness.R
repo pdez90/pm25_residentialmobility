@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # MULTI-POLLUTANT ROBUSTNESS: affordability, selection, opportunity,
 # segregation — for ALL EIGHT pollutants (stage 8b)
@@ -15,7 +21,7 @@
 #   figures/figS_mp_opportunity.png   figures/figS_mp_segregation.png
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr); library(fixest); library(splines); library(ggplot2); library(sf) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"; mig_dir <- base_dir
+base_dir <- migrate_data_dir(); mig_dir <- base_dir
 out_dir <- file.path(base_dir,"pm25_avoidance_lag3_olag1"); fig_dir <- file.path(out_dir,"figures")
 dir.create(fig_dir, showWarnings=FALSE, recursive=TRUE)
 migrate_years <- 2011:2019; AFFORD_MULT <- 3; SHORT_KM <- 50

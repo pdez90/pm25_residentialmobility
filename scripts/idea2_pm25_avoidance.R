@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # IDEA 2 (PM2.5 ONLY): DOES MIGRATION EQUALIZE OR ENTRENCH
 #         PM2.5 EXPOSURE?  The pollution-avoidance privilege.
@@ -21,7 +27,7 @@
 # (movers FROM majority-Black/Hispanic/white origins), not individuals.
 #
 # Input : pollution_bg/bg_pm25_panel.csv  (from extract_pm25_bg.R)
-# Output: /Users/priyanka/MIGRATE_dir/pm25_avoidance_<tag>/
+# Output: $MIGRATE_DATA_DIR/pm25_avoidance_<tag>/
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr) })
 if (!requireNamespace("fixest", quietly = TRUE)) install.packages("fixest")
@@ -30,7 +36,7 @@ library(fixest)
 # ---------------------------
 # Config
 # ---------------------------
-base_dir <- "/Users/priyanka/MIGRATE_dir"; mig_dir <- base_dir
+base_dir <- migrate_data_dir(); mig_dir <- base_dir
 gent_dir <- file.path(base_dir, "acs_gentrification")
 change_lag <- 3; origin_lag <- 1
 tag <- paste0("lag", change_lag, "_olag", origin_lag)

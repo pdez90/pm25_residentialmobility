@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # CROSS-POLLUTANT: does the same mechanism hold for NO2 and
 # wildfire PM2.5 as for total PM2.5?
@@ -18,11 +24,11 @@
 # crosswalk (from idea2_pm25_avoidance_v3.R). One MIGRATE pass per
 # year serves all pollutants.
 #
-# Output: /Users/priyanka/MIGRATE_dir/pm25_avoidance_lag3_olag1/
+# Output: $MIGRATE_DATA_DIR/pm25_avoidance_lag3_olag1/
 #   cross_pollutant_estimates.csv, figures/fig10_cross_pollutant.png
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr); library(fixest); library(splines); library(ggplot2) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"; mig_dir <- base_dir
+base_dir <- migrate_data_dir(); mig_dir <- base_dir
 gent_dir <- file.path(base_dir,"acs_gentrification"); change_lag <- 3; origin_lag <- 1
 tag <- "lag3_olag1"; migrate_years <- 2011:2019
 out_dir <- file.path(base_dir, paste0("pm25_avoidance_",tag)); fig_dir <- file.path(out_dir,"figures")

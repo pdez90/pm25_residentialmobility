@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # FAST REBUILD of bg_pollution_panel.csv from cached extractions
 # ------------------------------------------------------------
@@ -7,7 +13,7 @@
 # on every component, then merges. Seconds to run; needs only the caches.
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"; poll_dir <- file.path(base_dir,"pollution_bg")
+base_dir <- migrate_data_dir(); poll_dir <- file.path(base_dir,"pollution_bg")
 cache_dir <- file.path(poll_dir,"cache_multi"); if (!dir.exists(cache_dir)) cache_dir <- file.path(poll_dir,"cache")
 padbg <- function(dt){ dt[, geoid_bg := str_pad(as.character(geoid_bg),12,pad="0")]; dt }
 

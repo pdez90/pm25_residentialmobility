@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # TARGETED COVERAGE DIAGNOSTIC (pre-2015 PM2.5)
 # ------------------------------------------------------------
@@ -12,7 +18,7 @@
 # Instant (no MIGRATE pass).
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 pad_bg <- function(x) str_pad(as.character(x),12,pad="0")
 poll <- fread(file.path(base_dir,"pollution_bg","bg_pollution_panel.csv"), colClasses=c(geoid_bg="character"))
 poll[, geoid_bg:=pad_bg(geoid_bg)]; poll <- unique(poll[,.(geoid_bg,year,pm25)], by=c("geoid_bg","year"))

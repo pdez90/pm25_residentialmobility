@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # DIAGNOSTICS / VERIFICATION  (stage 11)
 # ------------------------------------------------------------
@@ -18,7 +24,7 @@
 # Run standalone:  Rscript scripts/run_diagnostics.R
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(stringr) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"; mig_dir <- base_dir
+base_dir <- migrate_data_dir(); mig_dir <- base_dir
 poll_dir <- file.path(base_dir,"pollution_bg"); out_dir <- file.path(base_dir,"pm25_avoidance_lag3_olag1")
 migrate_years <- 2011:2019
 pad_bg <- function(x) str_pad(as.character(x),12,pad="0")

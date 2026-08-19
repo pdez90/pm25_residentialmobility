@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # BLOCK-GROUP PM2.5 PANEL  (WashU / ACAG V6.NA)
 # ------------------------------------------------------------
@@ -6,7 +12,7 @@
 # Rasters are extracted to block groups once per year, per-state
 # chunked to bound memory, and cached (restartable).
 #
-# Output: /Users/priyanka/MIGRATE_dir/pollution_bg/bg_pm25_panel.csv
+# Output: $MIGRATE_DATA_DIR/pollution_bg/bg_pm25_panel.csv
 # ============================================================
 suppressPackageStartupMessages({
   library(sf); library(data.table); library(terra)
@@ -17,8 +23,8 @@ options(tigris_use_cache = TRUE); sf::sf_use_s2(FALSE)
 # ---------------------------
 # Paths + config
 # ---------------------------
-base_dir   <- "/Users/priyanka/MIGRATE_dir"
-pm_dir     <- "/Users/priyanka/Annual_PM_NAV6/PM25"     # WashU V6.NA total PM2.5 (mounted)
+base_dir   <- migrate_data_dir()
+pm_dir     <- file.path(pm25_raw_dir(), "PM25")     # WashU V6.NA total PM2.5 (mounted)
 out_dir    <- file.path(base_dir, "pollution_bg")
 cache_dir  <- file.path(out_dir, "cache"); dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
 scratch    <- file.path(out_dir, "_terra_tmp"); dir.create(scratch, showWarnings = FALSE, recursive = TRUE)

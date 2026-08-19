@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # DESCRIPTIVE MAPS FOR THE SI: start vs end year
 # ------------------------------------------------------------
@@ -28,7 +34,7 @@ suppressPackageStartupMessages({
 })
 options(tigris_use_cache = TRUE); sf::sf_use_s2(FALSE)
 
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 poll_dir <- file.path(base_dir, "pollution_bg")
 gent_dir <- file.path(base_dir, "acs_gentrification")
 ipums_dir <- file.path(base_dir, "ipums")

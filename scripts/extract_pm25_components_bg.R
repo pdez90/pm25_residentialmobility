@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # BLOCK-GROUP SPECIATED PM2.5 (WashU / ACAG V6.NA components)
 # ------------------------------------------------------------
@@ -24,8 +30,8 @@ suppressPackageStartupMessages({
 })
 options(tigris_use_cache = TRUE); sf::sf_use_s2(FALSE)
 
-base_dir  <- "/Users/priyanka/MIGRATE_dir"
-nav_dir   <- "/Users/priyanka/Annual_PM_NAV6"                     # parent folder with PM25/ BC/ OM/ ... subfolders
+base_dir  <- migrate_data_dir()
+nav_dir   <- pm25_raw_dir()                     # parent folder with PM25/ BC/ OM/ ... subfolders
 out_dir   <- file.path(base_dir, "pollution_bg"); cache_dir <- file.path(out_dir,"cache_comp")
 dir.create(cache_dir, showWarnings=FALSE, recursive=TRUE)
 scratch   <- file.path(out_dir,"_terra_tmp_comp"); dir.create(scratch, showWarnings=FALSE, recursive=TRUE)

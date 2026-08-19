@@ -21,3 +21,7 @@ naaqs/
 
 # OS
 .DS_Store
+
+# default location if MIGRATE_DATA_DIR is unset
+data/
+renv/library/

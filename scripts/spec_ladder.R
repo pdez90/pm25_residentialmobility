@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # SPECIFICATION LADDER for the conditional avoidance gap
 # ------------------------------------------------------------
@@ -14,7 +20,7 @@
 # Output: pm25_avoidance_lag3_olag1/ spec_ladder.csv + figures/figS_spec_ladder.png
 # ============================================================
 suppressPackageStartupMessages({ library(data.table); library(fixest); library(splines); library(ggplot2); library(stringr) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 out_dir  <- file.path(base_dir,"pm25_avoidance_lag3_olag1"); fig_dir <- file.path(out_dir,"figures")
 oyf <- file.path(out_dir,"origin_year_affordability.csv")
 stopifnot("run affordability_robustness.R first" = file.exists(oyf))

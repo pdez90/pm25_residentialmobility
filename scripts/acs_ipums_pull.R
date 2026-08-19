@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # PULL the ACS migration extract from the IPUMS API (ipumsr)
 # ------------------------------------------------------------
@@ -17,7 +23,7 @@
 # ============================================================
 if (!requireNamespace("ipumsr", quietly=TRUE)) install.packages("ipumsr", repos="https://cloud.r-project.org")
 suppressPackageStartupMessages({ library(ipumsr); library(data.table) })
-base_dir <- "/Users/priyanka/MIGRATE_dir"
+base_dir <- migrate_data_dir()
 ip_dir <- file.path(base_dir,"ipums"); dir.create(ip_dir, showWarnings=FALSE, recursive=TRUE)
 
 key <- Sys.getenv("IPUMS_API_KEY")

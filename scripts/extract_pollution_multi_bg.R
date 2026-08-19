@@ -1,3 +1,9 @@
+# ---- paths: this repo contains no absolute paths; see scripts/_paths.R ----
+# Set MIGRATE_DATA_DIR to your data root. Run scripts from the repository root.
+if (!exists(".migrate_paths_loaded")) source(
+  if (file.exists("scripts/_paths.R")) "scripts/_paths.R"
+  else if (file.exists("upstream/_paths.R")) "upstream/_paths.R" else "_paths.R")
+
 # ============================================================
 # BLOCK-GROUP MULTI-POLLUTANT PANEL
 #   pm25           WashU/ACAG V6.NA total PM2.5 (var "PM25")
@@ -20,14 +26,14 @@ suppressPackageStartupMessages({
 })
 options(tigris_use_cache = TRUE); sf::sf_use_s2(FALSE)
 
-base_dir  <- "/Users/priyanka/MIGRATE_dir"
-nav_dir   <- "/Users/priyanka/Annual_PM_NAV6"                                  # WashU V6.NA (PM25/ subfolder)
-no2_dir   <- "/Users/priyanka/Downloads/DHS_India/NO2"                         # figshare Global Surface NO2 annual GeoTIFFs
-ozone_dir <- "/Users/priyanka/Ozone/annual"                                    # Yale annual MDA8 NetCDFs (var WSMDA8)
+base_dir  <- migrate_data_dir()
+nav_dir   <- pm25_raw_dir()                                  # WashU V6.NA (PM25/ subfolder)
+no2_dir   <- no2_raw_dir()                         # figshare Global Surface NO2 annual GeoTIFFs
+ozone_dir <- file.path(ozone_raw_dir(), "annual")                                    # Yale annual MDA8 NetCDFs (var WSMDA8)
 ozone_var <- "WSMDA8"
 # --- wildfire smoke PM2.5: Childs et al. (grid shapefile + daily predictions RDS) ---
-grid_shp  <- "/Users/priyanka/Downloads/10km_grid/10km_grid_wgs84/10km_grid_wgs84.shp"
-pred_rds  <- "/Users/priyanka/Downloads/10km_grid/smokePM2pt5_predictions_daily_10km_20060101-20231231.rds"
+grid_shp  <- smoke_grid_shp()
+pred_rds  <- smoke_rds()
 
 out_dir   <- file.path(base_dir, "pollution_bg"); cache_dir <- file.path(out_dir, "cache_multi")
 dir.create(cache_dir, showWarnings=FALSE, recursive=TRUE)
