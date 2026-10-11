@@ -41,8 +41,10 @@ D <- list(
   mlist    = rd("metro_list.csv"),
   mbg      = rd("metro_bg.csv"),
   mdest    = rd("metro_dest.csv"),
-  msank    = rd("metro_sankey.csv")
+  msank    = rd("metro_sankey.csv"),
+  mpc      = rd("metro_principal_city.csv")
 )
+if (!is.null(D$mpc)) D$mpc[, cbsa := as.character(cbsa)]
 if (!is.null(D$mbg)) { D$mbg[, geoid_bg := as.character(geoid_bg)]; D$mbg[, cbsa := as.character(cbsa)] }
 if (!is.null(D$mdest)) { D$mdest[, cbsa := as.character(cbsa)] }
 if (!is.null(D$msank)) { D$msank[, cbsa := as.character(cbsa)] }
@@ -370,7 +372,11 @@ server <- function(input, output, session) {
             c(dest_black="majority-Black", dest_white="majority-white", dest_hisp="majority-Hispanic")[[input$me_layer]])) })
   output$me_map <- renderLeaflet({
     req(HAS_METRO); b <- me_bg(); req(nrow(b) > 0)
-    m <- leaflet(options=leafletOptions(preferCanvas=TRUE)) |> addProviderTiles(providers$CartoDB.Positron)
+    m <- leaflet(options=leafletOptions(preferCanvas=TRUE)) |>
+      addProviderTiles(providers$Esri.WorldGrayCanvas, group="Light") |>
+      addProviderTiles(providers$OpenStreetMap.Mapnik, group="Streets") |>
+      addLayersControl(baseGroups=c("Light","Streets"), position="topright", options=layersControlOptions(collapsed=TRUE))
+    if (!is.null(D$mpc)) { pc <- D$mpc[cbsa==input$me_cbsa]; if (nrow(pc)) m <- m |> addMarkers(data=pc, lng=~lon, lat=~lat, label=~principal_city, labelOptions=labelOptions(noHide=TRUE, direction="top", textsize="13px")) }
     if (input$me_layer == "re") {
       lim <- quantile(abs(b$re_pm25), 0.95, na.rm=TRUE); b[, v := pmax(pmin(re_pm25, lim), -lim)]
       pal <- colorNumeric(c("#2166AC","#F7F7F7","#B2182B"), domain=c(-lim, lim))

@@ -104,5 +104,14 @@ ml <- merge(top, cbn[, .(cbsa, name)], by="cbsa", all.x=TRUE)
 ml <- merge(ml, mbg[, .(lon=mean(lon), lat=mean(lat), n_bg=.N), by=cbsa], by="cbsa")
 ml[is.na(name), name := cbsa]; ml[, moves := round(moves)]
 fwrite(ml[order(-moves)], file.path(app_dir,"metro_list.csv"))
+# principal-city marker for the map (from the Reviewer-1 classification, if run)
+pcf <- file.path(out_dir,"r1_principal_cities.csv")
+if (file.exists(pcf)) {
+  pcs <- fread(pcf, colClasses=c(cbsa="character"))[cbsa %in% top$cbsa, .(cbsa, principal_city)]
+  pl  <- tryCatch({ x <- do.call(rbind, lapply(unique(substr(mbg$geoid_bg,1,2)), function(st) tigris::places(state=st, cb=TRUE, year=2019)[,c("GEOID","NAME")]))
+                    x <- sf::st_transform(x, 4326); xy <- sf::st_coordinates(sf::st_centroid(x)); data.table(place_geoid=x$GEOID, lon=round(xy[,1],4), lat=round(xy[,2],4)) }, error=function(e) NULL)
+  if (!is.null(pl)) { pcs <- merge(fread(pcf, colClasses=c(cbsa="character",place_geoid="character"))[cbsa %in% top$cbsa], pl, by="place_geoid")
+    fwrite(pcs[, .(cbsa, principal_city, lon, lat)], file.path(app_dir,"metro_principal_city.csv")) }
+}
 cat(sprintf("\nDONE. metro_bg %d rows, metro_dest %d rows, metro_sankey %d rows -> %s\n", nrow(mbg), nrow(d), nrow(s), app_dir))
 for (f in c("metro_bg.csv","metro_dest.csv","metro_sankey.csv","metro_list.csv")) cat(sprintf("  %-18s %6.1f MB\n", f, file.size(file.path(app_dir,f))/1e6))
