@@ -1,0 +1,33 @@
+o_race,opp,pollutant
+Majority Black,0.123720159895671,pm25
+Majority white (NH),0.260119557006928,pm25
+No majority,0.153018215464952,pm25
+Majority Hispanic,0.127275683997499,pm25
+Majority Black,0.117894536979436,no2
+Majority white (NH),0.252007087374547,no2
+No majority,0.149588911418382,no2
+Majority Hispanic,0.123516838564839,no2
+Majority Black,0.157155314397239,ozone
+Majority white (NH),0.295693086001102,ozone
+No majority,0.182070959049108,ozone
+Majority Hispanic,0.149191886268817,ozone
+Majority Black,0.124178887695749,bc
+Majority white (NH),0.259021782958715,bc
+No majority,0.152940115345686,bc
+Majority Hispanic,0.126274604875484,bc
+Majority Black,0.131111293475622,om
+Majority white (NH),0.262230167007159,om
+No majority,0.153674431951904,om
+Majority Hispanic,0.12693130026777,om
+Majority Black,0.136306016513044,so4
+Majority white (NH),0.268513873718541,so4
+No majority,0.161112502025378,so4
+Majority Hispanic,0.13278738033618,so4
+Majority Black,0.127772081345064,no3
+Majority white (NH),0.26366580023122,no3
+No majority,0.159727091714941,no3
+Majority Hispanic,0.13249797401616,no3
+Majority Black,0.118759369729837,wildfire_pm25
+Majority white (NH),0.245292332077813,wildfire_pm25
+No majority,0.154357872816313,wildfire_pm25
+Majority Hispanic,0.119238778815784,wildfire_pm25

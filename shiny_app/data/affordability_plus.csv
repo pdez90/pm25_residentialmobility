@@ -1,0 +1,6 @@
+model,black_gap,black_se,pct_explained
+base,0.1182,0.011,0
+destHV,0.1174,0.0117,0.6
+hchg,0.1179,0.0108,0.2
+r2i,0.1188,0.0109,-0.5
+opp,0.1207,0.0107,-2.1

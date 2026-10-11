@@ -105,6 +105,7 @@ Stages, in order: PM2.5 panel → speciated components → multi-pollutant panel
 | Block-group area vs. grid resolution | `blockgroup_area_summary.R` |
 | Descriptive maps and migration Sankey diagrams | `descriptive_maps_si.R`, `national_maps_si.R`, `pollution_sankey.R` |
 | Exploratory nonattainment analysis | `build_greenbook.R` → `naaqs_nonattainment.R` |
+| Revision (Reviewer 1): urban core/suburb/periphery O–D matrix, O–D-type fixed effects, gap by move-distance band | `reviewer1_urban_form_distance.R` (run after `run_main.R`) |
 
 `idea2_pm25_avoidance.R` builds the origin-year reallocation panel and subgroup summaries that `idea2_pm25_avoidance_v3.R` and later stages consume; both are required, and the driver runs them in that order.
 

@@ -1,0 +1,743 @@
+cbsa,o_race,dest_q,moves,re_pm25
+12060,Majority Black,Q1,263279.7,-0.385
+12060,Majority Black,Q2,399102.1,-0.197
+12060,Majority Black,Q3,425409.5,-0.032
+12060,Majority Black,Q4,316161.9,0.117
+12060,Majority Black,Q5,246633.6,0.312
+12060,Majority Hispanic,Q1,21095.3,-0.782
+12060,Majority Hispanic,Q2,30043,-0.449
+12060,Majority Hispanic,Q3,47407.6,-0.167
+12060,Majority Hispanic,Q4,56734.9,-0.022
+12060,Majority Hispanic,Q5,45959.9,0.118
+12060,Majority white (NH),Q1,920371.1,-0.212
+12060,Majority white (NH),Q2,614909.4,-0.024
+12060,Majority white (NH),Q3,381496,0.081
+12060,Majority white (NH),Q4,427121.5,0.164
+12060,Majority white (NH),Q5,460558.7,0.283
+12060,No majority,Q1,246597.2,-0.507
+12060,No majority,Q2,271116.1,-0.264
+12060,No majority,Q3,264019,-0.077
+12060,No majority,Q4,261465.1,0.056
+12060,No majority,Q5,219421.1,0.213
+12060,,Q1,36.9,-1.178
+12060,,Q2,59.1,-0.745
+12060,,Q3,64,-0.451
+12060,,Q4,47.6,-0.235
+12060,,Q5,32.2,0.051
+12580,Majority Black,Q1,57799.2,-0.499
+12580,Majority Black,Q2,114154.5,-0.251
+12580,Majority Black,Q3,133002.1,-0.114
+12580,Majority Black,Q4,159152.2,0.012
+12580,Majority Black,Q5,159554.4,0.217
+12580,Majority Hispanic,Q1,1822.8,-0.454
+12580,Majority Hispanic,Q2,1532.3,-0.257
+12580,Majority Hispanic,Q3,1250.5,-0.178
+12580,Majority Hispanic,Q4,1287.5,-0.038
+12580,Majority Hispanic,Q5,1758.6,0.154
+12580,Majority white (NH),Q1,402784.8,-0.277
+12580,Majority white (NH),Q2,283505.9,-0.062
+12580,Majority white (NH),Q3,213854.1,0.044
+12580,Majority white (NH),Q4,175315.8,0.151
+12580,Majority white (NH),Q5,180245.6,0.38
+12580,No majority,Q1,66579.8,-0.379
+12580,No majority,Q2,81217.5,-0.14
+12580,No majority,Q3,76172.7,-0.006
+12580,No majority,Q4,60153.6,0.1
+12580,No majority,Q5,52406.7,0.312
+12580,,Q1,14.3,-0.895
+12580,,Q2,19.1,-0.394
+12580,,Q3,46.1,-0.237
+12580,,Q4,38.5,-0.084
+12580,,Q5,53.4,0.144
+14460,Majority Black,Q1,14016.3,-0.516
+14460,Majority Black,Q2,22868.7,-0.503
+14460,Majority Black,Q3,13908.5,-0.242
+14460,Majority Black,Q4,45180.4,-0.022
+14460,Majority Black,Q5,40312.6,0.142
+14460,Majority Hispanic,Q1,14365.4,-0.995
+14460,Majority Hispanic,Q2,31596.4,-0.473
+14460,Majority Hispanic,Q3,64960.1,-0.139
+14460,Majority Hispanic,Q4,40753,-0.053
+14460,Majority Hispanic,Q5,40077,0.082
+14460,Majority white (NH),Q1,919214,-0.287
+14460,Majority white (NH),Q2,711241.5,-0.151
+14460,Majority white (NH),Q3,540625.7,0.004
+14460,Majority white (NH),Q4,393786.3,0.146
+14460,Majority white (NH),Q5,437051.2,0.356
+14460,No majority,Q1,43637.4,-0.894
+14460,No majority,Q2,74494.3,-0.525
+14460,No majority,Q3,101075.5,-0.218
+14460,No majority,Q4,108002.2,-0.026
+14460,No majority,Q5,97707.2,0.17
+14460,,Q1,70.7,-0.509
+14460,,Q2,48.9,-0.832
+14460,,Q3,69.9,-0.646
+14460,,Q4,86.4,-0.165
+14460,,Q5,124.1,0.025
+16740,Majority Black,Q1,48912.2,-0.357
+16740,Majority Black,Q2,58676.3,-0.226
+16740,Majority Black,Q3,68722.4,-0.123
+16740,Majority Black,Q4,76844.5,-0.005
+16740,Majority Black,Q5,86012,0.166
+16740,Majority Hispanic,Q1,4306.1,-0.415
+16740,Majority Hispanic,Q2,5077.4,-0.254
+16740,Majority Hispanic,Q3,7065,-0.159
+16740,Majority Hispanic,Q4,7820.5,-0.048
+16740,Majority Hispanic,Q5,11273,0.125
+16740,Majority white (NH),Q1,335720.3,-0.206
+16740,Majority white (NH),Q2,324419.6,-0.061
+16740,Majority white (NH),Q3,311823,0.018
+16740,Majority white (NH),Q4,273152,0.088
+16740,Majority white (NH),Q5,243636.1,0.229
+16740,No majority,Q1,65829.3,-0.366
+16740,No majority,Q2,81409,-0.194
+16740,No majority,Q3,96400.8,-0.075
+16740,No majority,Q4,100017.7,0.038
+16740,No majority,Q5,90929.4,0.24
+16740,,Q1,47.2,-0.73
+16740,,Q2,54.8,-0.407
+16740,,Q3,62.3,-0.254
+16740,,Q4,103.9,-0.047
+16740,,Q5,103.5,0.248
+16980,Majority Black,Q1,189469.5,-0.445
+16980,Majority Black,Q2,229819.5,-0.161
+16980,Majority Black,Q3,229708.3,-0.009
+16980,Majority Black,Q4,275247.6,0.105
+16980,Majority Black,Q5,341689.6,0.282
+16980,Majority Hispanic,Q1,184680.4,-0.585
+16980,Majority Hispanic,Q2,248377.5,-0.155
+16980,Majority Hispanic,Q3,270394.6,-0.039
+16980,Majority Hispanic,Q4,268790.8,0.083
+16980,Majority Hispanic,Q5,228646.4,0.28
+16980,Majority white (NH),Q1,1464205.1,-0.326
+16980,Majority white (NH),Q2,949474,-0.055
+16980,Majority white (NH),Q3,859330.2,0.063
+16980,Majority white (NH),Q4,818082.1,0.187
+16980,Majority white (NH),Q5,812929.4,0.379
+16980,No majority,Q1,267876.6,-0.427
+16980,No majority,Q2,223107.3,-0.138
+16980,No majority,Q3,227085.4,0.006
+16980,No majority,Q4,229675.8,0.122
+16980,No majority,Q5,225187.4,0.319
+16980,,Q1,392.8,0.004
+16980,,Q2,220.9,0.266
+16980,,Q3,155.8,0.477
+16980,,Q4,121.5,0.825
+16980,,Q5,93.6,1.015
+17140,Majority Black,Q1,8877,-0.806
+17140,Majority Black,Q2,49442.3,-0.183
+17140,Majority Black,Q3,62409.3,-0.07
+17140,Majority Black,Q4,59364.6,0.04
+17140,Majority Black,Q5,57209,0.306
+17140,Majority Hispanic,Q1,97,-1.362
+17140,Majority Hispanic,Q2,322.4,-0.798
+17140,Majority Hispanic,Q3,463.7,-0.333
+17140,Majority Hispanic,Q4,520,-0.114
+17140,Majority Hispanic,Q5,614.9,0.022
+17140,Majority white (NH),Q1,522259.8,-0.397
+17140,Majority white (NH),Q2,395534.4,-0.061
+17140,Majority white (NH),Q3,331416.1,0.089
+17140,Majority white (NH),Q4,319330.8,0.179
+17140,Majority white (NH),Q5,329105.2,0.346
+17140,No majority,Q1,6773.2,-1.091
+17140,No majority,Q2,18238.1,-0.338
+17140,No majority,Q3,20878.9,-0.172
+17140,No majority,Q4,24188.3,-0.053
+17140,No majority,Q5,25784.7,0.119
+17140,,Q1,21,-0.936
+17140,,Q2,14.6,-0.305
+17140,,Q3,13.6,0.057
+17140,,Q4,9.7,0.073
+17140,,Q5,3.2,0.246
+18140,Majority Black,Q1,11059.8,-1.154
+18140,Majority Black,Q2,48354,-0.367
+18140,Majority Black,Q3,65075.9,-0.133
+18140,Majority Black,Q4,62814.6,0.01
+18140,Majority Black,Q5,67874.8,0.215
+18140,Majority Hispanic,Q1,112.4,-1.504
+18140,Majority Hispanic,Q2,272.7,-0.625
+18140,Majority Hispanic,Q3,364.6,-0.186
+18140,Majority Hispanic,Q4,834.2,-0.048
+18140,Majority Hispanic,Q5,678.2,0.214
+18140,Majority white (NH),Q1,439414.3,-0.397
+18140,Majority white (NH),Q2,403646.5,-0.062
+18140,Majority white (NH),Q3,318147.3,0.073
+18140,Majority white (NH),Q4,307243.8,0.179
+18140,Majority white (NH),Q5,294193.6,0.323
+18140,No majority,Q1,14930.3,-0.984
+18140,No majority,Q2,37486.9,-0.313
+18140,No majority,Q3,42836.5,-0.058
+18140,No majority,Q4,42028.5,0.064
+18140,No majority,Q5,38587.7,0.239
+18140,,Q1,11.1,-0.937
+18140,,Q2,36.5,-0.612
+18140,,Q3,27.9,-0.158
+18140,,Q4,29.4,-0.08
+18140,,Q5,28.1,0.196
+19100,Majority Black,Q1,82537.8,-0.401
+19100,Majority Black,Q2,141044.1,-0.143
+19100,Majority Black,Q3,119776.6,-0.001
+19100,Majority Black,Q4,91530.9,0.092
+19100,Majority Black,Q5,88563.9,0.253
+19100,Majority Hispanic,Q1,196786.7,-0.538
+19100,Majority Hispanic,Q2,240873.6,-0.218
+19100,Majority Hispanic,Q3,245031.4,-0.084
+19100,Majority Hispanic,Q4,245159.7,0.006
+19100,Majority Hispanic,Q5,254142.3,0.148
+19100,Majority white (NH),Q1,1277655,-0.228
+19100,Majority white (NH),Q2,915136.3,-0.029
+19100,Majority white (NH),Q3,731666.8,0.081
+19100,Majority white (NH),Q4,635047,0.148
+19100,Majority white (NH),Q5,537482.8,0.319
+19100,No majority,Q1,427990.3,-0.443
+19100,No majority,Q2,495030.3,-0.163
+19100,No majority,Q3,455800.9,-0.025
+19100,No majority,Q4,399677.4,0.057
+19100,No majority,Q5,395282.3,0.204
+19100,,Q1,81.9,-1.076
+19100,,Q2,134.3,-0.581
+19100,,Q3,141.1,-0.45
+19100,,Q4,228,-0.262
+19100,,Q5,260.5,-0.038
+19740,Majority Black,Q1,1910.1,-1.067
+19740,Majority Black,Q2,3831.5,-0.445
+19740,Majority Black,Q3,3240.5,-0.256
+19740,Majority Black,Q4,2937,-0.058
+19740,Majority Black,Q5,3839.9,0.193
+19740,Majority Hispanic,Q1,38887.9,-1.652
+19740,Majority Hispanic,Q2,78818.2,-0.624
+19740,Majority Hispanic,Q3,94388.7,-0.345
+19740,Majority Hispanic,Q4,96239.1,-0.106
+19740,Majority Hispanic,Q5,108140.3,0.188
+19740,Majority white (NH),Q1,619465.2,-0.645
+19740,Majority white (NH),Q2,573598.1,-0.016
+19740,Majority white (NH),Q3,452091.8,0.192
+19740,Majority white (NH),Q4,332464.4,0.315
+19740,Majority white (NH),Q5,321026.6,0.552
+19740,No majority,Q1,61956.3,-1.111
+19740,No majority,Q2,103435.9,-0.304
+19740,No majority,Q3,94314.4,-0.047
+19740,No majority,Q4,66743,0.129
+19740,No majority,Q5,62682.6,0.418
+19740,,Q1,38.1,-1.477
+19740,,Q2,131.5,-0.113
+19740,,Q3,94,0.35
+19740,,Q4,24.4,0.271
+19740,,Q5,53.2,1.171
+19820,Majority Black,Q1,102985.3,-0.508
+19820,Majority Black,Q2,214094.6,-0.17
+19820,Majority Black,Q3,218976.2,-0.054
+19820,Majority Black,Q4,205323.7,0.055
+19820,Majority Black,Q5,207407.1,0.251
+19820,Majority Hispanic,Q1,5423.9,-0.947
+19820,Majority Hispanic,Q2,5337.8,-0.58
+19820,Majority Hispanic,Q3,6177.1,-0.438
+19820,Majority Hispanic,Q4,8584.1,-0.419
+19820,Majority Hispanic,Q5,21914.3,-0.078
+19820,Majority white (NH),Q1,1201486.3,-0.332
+19820,Majority white (NH),Q2,535915,0.035
+19820,Majority white (NH),Q3,458646.1,0.113
+19820,Majority white (NH),Q4,403243.9,0.186
+19820,Majority white (NH),Q5,375999.6,0.345
+19820,No majority,Q1,52188.7,-0.641
+19820,No majority,Q2,49843.4,-0.113
+19820,No majority,Q3,45260.3,-0.035
+19820,No majority,Q4,45556.2,0.046
+19820,No majority,Q5,46693.9,0.197
+19820,,Q1,26.4,-0.671
+19820,,Q2,49.4,-0.296
+19820,,Q3,65,-0.149
+19820,,Q4,38.7,-0.041
+19820,,Q5,65.7,0.208
+26420,Majority Black,Q1,51527.5,-0.505
+26420,Majority Black,Q2,105772.2,-0.214
+26420,Majority Black,Q3,114831.6,-0.075
+26420,Majority Black,Q4,114794.8,0.025
+26420,Majority Black,Q5,113750.8,0.25
+26420,Majority Hispanic,Q1,207931.4,-0.578
+26420,Majority Hispanic,Q2,272225.8,-0.282
+26420,Majority Hispanic,Q3,296827.2,-0.126
+26420,Majority Hispanic,Q4,308354.8,-0.004
+26420,Majority Hispanic,Q5,391003.6,0.169
+26420,Majority white (NH),Q1,661311.7,-0.264
+26420,Majority white (NH),Q2,600107.7,-0.064
+26420,Majority white (NH),Q3,479724.4,0.055
+26420,Majority white (NH),Q4,433004.5,0.142
+26420,Majority white (NH),Q5,345929.5,0.374
+26420,No majority,Q1,370283.8,-0.449
+26420,No majority,Q2,499745.5,-0.159
+26420,No majority,Q3,466777.9,-0.004
+26420,No majority,Q4,411609.2,0.109
+26420,No majority,Q5,302580.4,0.337
+26420,,Q1,0.5,-1.178
+26420,,Q2,0,-0.561
+26420,,Q3,0,-0.262
+26420,,Q4,2.4,-0.054
+26420,,Q5,8.1,0.056
+26900,Majority Black,Q1,10826.4,-0.758
+26900,Majority Black,Q2,53073,-0.297
+26900,Majority Black,Q3,67919.8,-0.101
+26900,Majority Black,Q4,64763.7,0.04
+26900,Majority Black,Q5,55390.6,0.3
+26900,Majority Hispanic,Q1,772.6,-1.083
+26900,Majority Hispanic,Q2,3039.9,-0.357
+26900,Majority Hispanic,Q3,4373.1,-0.088
+26900,Majority Hispanic,Q4,3522,0.074
+26900,Majority Hispanic,Q5,3642.7,0.305
+26900,Majority white (NH),Q1,411024.5,-0.372
+26900,Majority white (NH),Q2,512418,-0.085
+26900,Majority white (NH),Q3,339989.1,0.086
+26900,Majority white (NH),Q4,254617,0.188
+26900,Majority white (NH),Q5,200472.3,0.39
+26900,No majority,Q1,14896.2,-0.884
+26900,No majority,Q2,48376.9,-0.352
+26900,No majority,Q3,61847.7,-0.099
+26900,No majority,Q4,52173.5,0.047
+26900,No majority,Q5,45798.7,0.269
+28140,Majority Black,Q1,13709.8,-0.492
+28140,Majority Black,Q2,32001.9,-0.236
+28140,Majority Black,Q3,42457.3,-0.102
+28140,Majority Black,Q4,53232.9,0.019
+28140,Majority Black,Q5,48607.9,0.165
+28140,Majority Hispanic,Q1,5138.3,-0.774
+28140,Majority Hispanic,Q2,8121.4,-0.361
+28140,Majority Hispanic,Q3,9637.5,-0.232
+28140,Majority Hispanic,Q4,9674.9,-0.093
+28140,Majority Hispanic,Q5,13881.8,0.097
+28140,Majority white (NH),Q1,541219,-0.264
+28140,Majority white (NH),Q2,437017.7,-0.052
+28140,Majority white (NH),Q3,346017.2,0.044
+28140,Majority white (NH),Q4,302031.3,0.13
+28140,Majority white (NH),Q5,259273.9,0.33
+28140,No majority,Q1,22410.6,-0.523
+28140,No majority,Q2,35134.1,-0.191
+28140,No majority,Q3,36592.7,-0.066
+28140,No majority,Q4,33902.3,0.044
+28140,No majority,Q5,31768,0.223
+28140,,Q1,50.4,-0.493
+28140,,Q2,52.9,-0.23
+28140,,Q3,44.2,-0.06
+28140,,Q4,58.5,-0.021
+28140,,Q5,35.7,0.192
+29820,Majority Black,Q1,2167.6,-1.551
+29820,Majority Black,Q2,1850.4,-0.684
+29820,Majority Black,Q3,4674.7,-0.251
+29820,Majority Black,Q4,5542.3,0.037
+29820,Majority Black,Q5,2766.8,0.455
+29820,Majority Hispanic,Q1,47661.4,-1.846
+29820,Majority Hispanic,Q2,52048.5,-0.973
+29820,Majority Hispanic,Q3,83317.2,-0.43
+29820,Majority Hispanic,Q4,96082,-0.069
+29820,Majority Hispanic,Q5,89714.8,0.189
+29820,Majority white (NH),Q1,443181.6,-0.434
+29820,Majority white (NH),Q2,294179.9,0.2
+29820,Majority white (NH),Q3,153444,0.53
+29820,Majority white (NH),Q4,67696.5,0.857
+29820,Majority white (NH),Q5,46947.7,1.095
+29820,No majority,Q1,316853.6,-0.857
+29820,No majority,Q2,259971.1,-0.106
+29820,No majority,Q3,207016.5,0.184
+29820,No majority,Q4,133587.4,0.422
+29820,No majority,Q5,89948,0.69
+29820,,Q1,8,-1.72
+29820,,Q2,29.7,-0.581
+29820,,Q3,35.9,-0.337
+29820,,Q4,31.5,0.038
+29820,,Q5,28.7,0.295
+31080,Majority Black,Q1,13193.8,-2.777
+31080,Majority Black,Q2,22022.9,-0.654
+31080,Majority Black,Q3,57872.6,-0.177
+31080,Majority Black,Q4,59387.8,0.035
+31080,Majority Black,Q5,35591.7,0.505
+31080,Majority Hispanic,Q1,614676.9,-1.301
+31080,Majority Hispanic,Q2,690026.1,-0.315
+31080,Majority Hispanic,Q3,830609.7,-0.121
+31080,Majority Hispanic,Q4,851835.7,0.035
+31080,Majority Hispanic,Q5,865617.3,0.389
+31080,Majority white (NH),Q1,1379276.9,-0.458
+31080,Majority white (NH),Q2,704573.9,0.185
+31080,Majority white (NH),Q3,409368.5,0.411
+31080,Majority white (NH),Q4,321876.8,0.558
+31080,Majority white (NH),Q5,360347.4,1.038
+31080,No majority,Q1,838327.3,-0.942
+31080,No majority,Q2,788773.3,-0.172
+31080,No majority,Q3,586848,0.056
+31080,No majority,Q4,463583.4,0.237
+31080,No majority,Q5,543076,0.612
+31080,,Q1,275.7,-1.298
+31080,,Q2,239.6,-0.172
+31080,,Q3,353.4,0.173
+31080,,Q4,299.6,0.34
+31080,,Q5,188.2,0.943
+33100,Majority Black,Q1,105381.9,-0.29
+33100,Majority Black,Q2,133150.1,-0.135
+33100,Majority Black,Q3,142860.3,-0.079
+33100,Majority Black,Q4,171558.2,-0.011
+33100,Majority Black,Q5,196193,0.106
+33100,Majority Hispanic,Q1,374346.3,-0.249
+33100,Majority Hispanic,Q2,328020.6,-0.077
+33100,Majority Hispanic,Q3,341391.5,-0.007
+33100,Majority Hispanic,Q4,327104.1,0.08
+33100,Majority Hispanic,Q5,365060.4,0.248
+33100,Majority white (NH),Q1,402262.1,-0.184
+33100,Majority white (NH),Q2,341503.5,-0.009
+33100,Majority white (NH),Q3,243796.7,0.059
+33100,Majority white (NH),Q4,209036.5,0.125
+33100,Majority white (NH),Q5,159655,0.245
+33100,No majority,Q1,233460.1,-0.202
+33100,No majority,Q2,237123.6,-0.033
+33100,No majority,Q3,200639.8,0.04
+33100,No majority,Q4,182899.2,0.125
+33100,No majority,Q5,137042.9,0.258
+33100,,Q1,246.3,-0.347
+33100,,Q2,229.2,-0.205
+33100,,Q3,316.4,-0.108
+33100,,Q4,275.4,0.029
+33100,,Q5,371.4,0.136
+33460,Majority Black,Q1,8157.1,-0.615
+33460,Majority Black,Q2,13555.2,-0.234
+33460,Majority Black,Q3,19329.1,-0.066
+33460,Majority Black,Q4,23855.7,0.03
+33460,Majority Black,Q5,17957.8,0.231
+33460,Majority Hispanic,Q1,1804.9,-0.474
+33460,Majority Hispanic,Q2,2015.7,-0.323
+33460,Majority Hispanic,Q3,2632,-0.202
+33460,Majority Hispanic,Q4,4406.3,-0.07
+33460,Majority Hispanic,Q5,5661.4,0.126
+33460,Majority white (NH),Q1,853115,-0.323
+33460,Majority white (NH),Q2,701907.8,-0.054
+33460,Majority white (NH),Q3,518560.1,0.064
+33460,Majority white (NH),Q4,468611,0.142
+33460,Majority white (NH),Q5,479802.1,0.319
+33460,No majority,Q1,47035.9,-0.748
+33460,No majority,Q2,73553.3,-0.307
+33460,No majority,Q3,97960.3,-0.113
+33460,No majority,Q4,114784.9,0.009
+33460,No majority,Q5,99780.2,0.199
+33460,,Q2,1,-0.847
+33460,,Q4,0.1,-0.101
+33460,,Q5,1.7,0.646
+35620,Majority Black,Q1,177280.5,-0.431
+35620,Majority Black,Q2,241993.4,-0.171
+35620,Majority Black,Q3,268399,-0.033
+35620,Majority Black,Q4,296037.2,0.101
+35620,Majority Black,Q5,333469.4,0.287
+35620,Majority Hispanic,Q1,228221.8,-0.544
+35620,Majority Hispanic,Q2,303213.3,-0.233
+35620,Majority Hispanic,Q3,390981.1,-0.076
+35620,Majority Hispanic,Q4,412150,0.041
+35620,Majority Hispanic,Q5,515739.9,0.241
+35620,Majority white (NH),Q1,2057578.6,-0.319
+35620,Majority white (NH),Q2,1269735.2,-0.065
+35620,Majority white (NH),Q3,1057855.6,0.066
+35620,Majority white (NH),Q4,951238,0.198
+35620,Majority white (NH),Q5,827832.8,0.446
+35620,No majority,Q1,399463.2,-0.637
+35620,No majority,Q2,488047.8,-0.259
+35620,No majority,Q3,531757.1,-0.08
+35620,No majority,Q4,535512.1,0.059
+35620,No majority,Q5,589427.3,0.262
+35620,,Q1,217.6,-0.771
+35620,,Q2,299.4,-0.449
+35620,,Q3,369.2,-0.207
+35620,,Q4,358.1,-0.023
+35620,,Q5,372.8,0.335
+37980,Majority Black,Q1,56003.8,-0.699
+37980,Majority Black,Q2,84778.3,-0.368
+37980,Majority Black,Q3,138967.5,-0.249
+37980,Majority Black,Q4,208619.5,-0.105
+37980,Majority Black,Q5,277798.3,0.139
+37980,Majority Hispanic,Q1,10387.2,-0.656
+37980,Majority Hispanic,Q2,17232.7,-0.327
+37980,Majority Hispanic,Q3,34395.2,-0.22
+37980,Majority Hispanic,Q4,65234,-0.023
+37980,Majority Hispanic,Q5,26074.4,0.331
+37980,Majority white (NH),Q1,1043782,-0.264
+37980,Majority white (NH),Q2,803181.9,-0.033
+37980,Majority white (NH),Q3,522523.5,0.075
+37980,Majority white (NH),Q4,385070.5,0.197
+37980,Majority white (NH),Q5,314141.3,0.463
+37980,No majority,Q1,97585.5,-0.463
+37980,No majority,Q2,105093.1,-0.184
+37980,No majority,Q3,112970.9,-0.099
+37980,No majority,Q4,117102.7,0.03
+37980,No majority,Q5,91120.8,0.275
+37980,,Q1,12.6,-0.877
+37980,,Q2,23.3,-0.335
+37980,,Q3,34.8,-0.253
+37980,,Q4,23,-0.185
+37980,,Q5,23.8,0.427
+38060,Majority Black,Q1,245.3,-1.562
+38060,Majority Black,Q2,441.1,-0.867
+38060,Majority Black,Q3,955.9,-0.408
+38060,Majority Black,Q4,1613.4,-0.152
+38060,Majority Black,Q5,1984,0.247
+38060,Majority Hispanic,Q1,78979.9,-1.184
+38060,Majority Hispanic,Q2,119058.8,-0.605
+38060,Majority Hispanic,Q3,183217.1,-0.357
+38060,Majority Hispanic,Q4,282056.5,-0.169
+38060,Majority Hispanic,Q5,445777.6,0.205
+38060,Majority white (NH),Q1,839555.5,-0.542
+38060,Majority white (NH),Q2,776318.2,-0.117
+38060,Majority white (NH),Q3,697867.8,0.069
+38060,Majority white (NH),Q4,647722.5,0.234
+38060,Majority white (NH),Q5,594723.1,0.631
+38060,No majority,Q1,94029.8,-0.927
+38060,No majority,Q2,131272.6,-0.388
+38060,No majority,Q3,172987.9,-0.147
+38060,No majority,Q4,211404.7,0.033
+38060,No majority,Q5,235329.4,0.426
+38060,,Q1,6.6,-1.472
+38060,,Q2,12.6,-0.653
+38060,,Q3,13.7,-0.162
+38060,,Q4,22.4,0.252
+38060,,Q5,15.5,0.299
+38900,Majority Black,Q1,38.5,-2.356
+38900,Majority Black,Q2,109.6,-0.477
+38900,Majority Black,Q3,160,-0.314
+38900,Majority Black,Q4,320.8,-0.091
+38900,Majority Black,Q5,466.4,0.205
+38900,Majority Hispanic,Q1,9913.9,-0.783
+38900,Majority Hispanic,Q2,9247.6,0.027
+38900,Majority Hispanic,Q3,6891.5,0.164
+38900,Majority Hispanic,Q4,4824.7,0.249
+38900,Majority Hispanic,Q5,3621,0.529
+38900,Majority white (NH),Q1,414997.4,-0.723
+38900,Majority white (NH),Q2,448232.3,-0.135
+38900,Majority white (NH),Q3,451861.2,0.028
+38900,Majority white (NH),Q4,520377.1,0.132
+38900,Majority white (NH),Q5,518045.2,0.293
+38900,No majority,Q1,21296.8,-1.066
+38900,No majority,Q2,33542.2,-0.229
+38900,No majority,Q3,32745.1,-0.074
+38900,No majority,Q4,43513.1,0.029
+38900,No majority,Q5,48243.6,0.252
+38900,,Q1,1.1,-1.352
+38900,,Q2,1.9,-0.606
+38900,,Q3,1.4,-0.149
+38900,,Q4,1.4,0.162
+38900,,Q5,1.9,0.426
+40140,Majority Black,Q1,647.9,-1.102
+40140,Majority Black,Q2,712.5,-0.933
+40140,Majority Black,Q3,1157.4,-0.353
+40140,Majority Black,Q4,1074.3,0.503
+40140,Majority Black,Q5,296,2.725
+40140,Majority Hispanic,Q1,287956.3,-1.272
+40140,Majority Hispanic,Q2,317655.8,-1.163
+40140,Majority Hispanic,Q3,385504.2,-0.573
+40140,Majority Hispanic,Q4,368197.5,0.102
+40140,Majority Hispanic,Q5,329565.5,0.711
+40140,Majority white (NH),Q1,276818.5,-0.537
+40140,Majority white (NH),Q2,292440.1,0.012
+40140,Majority white (NH),Q3,168266.4,0.656
+40140,Majority white (NH),Q4,87175,1.389
+40140,Majority white (NH),Q5,49484.1,2.491
+40140,No majority,Q1,177770.7,-1.419
+40140,No majority,Q2,306958.7,-0.676
+40140,No majority,Q3,300753.5,-0.223
+40140,No majority,Q4,246080.7,0.469
+40140,No majority,Q5,185144.2,1.205
+40140,,Q1,3.9,-3.821
+40140,,Q2,1,-3.209
+40140,,Q3,3.9,-0.844
+40140,,Q4,10.2,1.26
+40140,,Q5,0.9,0.521
+40900,Majority Black,Q1,534.2,-0.967
+40900,Majority Black,Q2,1039.3,-0.321
+40900,Majority Black,Q3,1058.7,0.005
+40900,Majority Black,Q4,840.7,0.117
+40900,Majority Black,Q5,1441.9,0.421
+40900,Majority Hispanic,Q1,31805.2,-0.315
+40900,Majority Hispanic,Q2,22684.5,-0.103
+40900,Majority Hispanic,Q3,18829.8,0.005
+40900,Majority Hispanic,Q4,15290.9,0.164
+40900,Majority Hispanic,Q5,24007.7,0.29
+40900,Majority white (NH),Q1,347567.9,-0.469
+40900,Majority white (NH),Q2,299381.1,-0.03
+40900,Majority white (NH),Q3,228707.3,0.159
+40900,Majority white (NH),Q4,204623.8,0.275
+40900,Majority white (NH),Q5,156161.6,0.493
+40900,No majority,Q1,141709.4,-0.771
+40900,No majority,Q2,185699.9,-0.248
+40900,No majority,Q3,164759,-0.025
+40900,No majority,Q4,153804.5,0.123
+40900,No majority,Q5,237664.1,0.317
+40900,,Q2,2.4,-0.497
+40900,,Q3,1.4,-0.978
+40900,,Q4,7,1.096
+40900,,Q5,8.1,-0.244
+41180,Majority Black,Q1,56063.5,-0.458
+41180,Majority Black,Q2,128758.4,-0.184
+41180,Majority Black,Q3,126359.2,-0.047
+41180,Majority Black,Q4,105320.7,0.082
+41180,Majority Black,Q5,111535.2,0.283
+41180,Majority Hispanic,Q1,640.1,-0.818
+41180,Majority Hispanic,Q2,907.7,-0.211
+41180,Majority Hispanic,Q3,590.2,-0.1
+41180,Majority Hispanic,Q4,662.9,-0.054
+41180,Majority Hispanic,Q5,929.8,0.257
+41180,Majority white (NH),Q1,680726.7,-0.332
+41180,Majority white (NH),Q2,372713.4,-0.107
+41180,Majority white (NH),Q3,335616.9,0
+41180,Majority white (NH),Q4,357531,0.113
+41180,Majority white (NH),Q5,476521.7,0.365
+41180,No majority,Q1,15313.6,-0.534
+41180,No majority,Q2,25775.2,-0.189
+41180,No majority,Q3,24983.2,-0.054
+41180,No majority,Q4,26911.6,0.073
+41180,No majority,Q5,26153.5,0.316
+41180,,Q1,16,-0.757
+41180,,Q2,11.7,-0.045
+41180,,Q3,20.1,-0.068
+41180,,Q4,15.4,0.031
+41180,,Q5,4.6,0.422
+41700,Majority Black,Q1,852.8,-1.248
+41700,Majority Black,Q2,1693.2,-0.667
+41700,Majority Black,Q3,1623.1,-0.525
+41700,Majority Black,Q4,2439.2,-0.34
+41700,Majority Black,Q5,4195,-0.007
+41700,Majority Hispanic,Q1,235527.3,-0.588
+41700,Majority Hispanic,Q2,244306.3,-0.211
+41700,Majority Hispanic,Q3,228043.6,-0.052
+41700,Majority Hispanic,Q4,218080.5,0.098
+41700,Majority Hispanic,Q5,193876.9,0.34
+41700,Majority white (NH),Q1,239886.5,-0.236
+41700,Majority white (NH),Q2,156946.5,0.047
+41700,Majority white (NH),Q3,93049.9,0.155
+41700,Majority white (NH),Q4,74918.2,0.269
+41700,Majority white (NH),Q5,70166.9,0.476
+41700,No majority,Q1,122593.8,-0.505
+41700,No majority,Q2,135005.1,-0.104
+41700,No majority,Q3,94282.7,0.042
+41700,No majority,Q4,76174.3,0.173
+41700,No majority,Q5,52592.6,0.451
+41700,,Q1,55.9,-1.004
+41700,,Q2,77.7,-0.348
+41700,,Q3,59.7,-0.16
+41700,,Q4,94.9,0.021
+41700,,Q5,42.4,0.656
+41740,Majority Black,Q1,107.6,-1.736
+41740,Majority Black,Q2,230.8,-0.756
+41740,Majority Black,Q3,247.4,-0.107
+41740,Majority Black,Q4,496.4,0.325
+41740,Majority Black,Q5,212.2,1.283
+41740,Majority Hispanic,Q1,75526.1,-1.112
+41740,Majority Hispanic,Q2,97656.3,-0.555
+41740,Majority Hispanic,Q3,110047.7,-0.401
+41740,Majority Hispanic,Q4,160157.1,-0.186
+41740,Majority Hispanic,Q5,228371.8,0.331
+41740,Majority white (NH),Q1,365268.9,-0.744
+41740,Majority white (NH),Q2,370647.9,-0.219
+41740,Majority white (NH),Q3,315748.7,0.094
+41740,Majority white (NH),Q4,252499.4,0.47
+41740,Majority white (NH),Q5,207046.8,1.035
+41740,No majority,Q1,162284.2,-0.771
+41740,No majority,Q2,163833.6,-0.308
+41740,No majority,Q3,165157.9,-0.064
+41740,No majority,Q4,183733.7,0.222
+41740,No majority,Q5,159504.4,0.846
+41740,,Q1,2.3,-3.539
+41740,,Q2,10.7,-1.205
+41740,,Q3,12.6,-0.762
+41740,,Q4,11,-0.16
+41740,,Q5,3.9,0.76
+41860,Majority Black,Q1,4182.4,-1.057
+41860,Majority Black,Q2,6047.8,-0.562
+41860,Majority Black,Q3,11835.4,-0.193
+41860,Majority Black,Q4,13068.9,0.093
+41860,Majority Black,Q5,14449.2,0.454
+41860,Majority Hispanic,Q1,61258.9,-0.672
+41860,Majority Hispanic,Q2,70089.8,-0.293
+41860,Majority Hispanic,Q3,83158.9,-0.091
+41860,Majority Hispanic,Q4,72555.2,0.112
+41860,Majority Hispanic,Q5,65065.6,0.373
+41860,Majority white (NH),Q1,387771.6,-0.48
+41860,Majority white (NH),Q2,290121.7,-0.063
+41860,Majority white (NH),Q3,223269.3,0.145
+41860,Majority white (NH),Q4,206386.1,0.3
+41860,Majority white (NH),Q5,189183.3,0.6
+41860,No majority,Q1,358069.2,-0.771
+41860,No majority,Q2,362854.3,-0.284
+41860,No majority,Q3,364998,-0.05
+41860,No majority,Q4,342094.6,0.157
+41860,No majority,Q5,323490.1,0.492
+41860,,Q1,108.3,-0.117
+41860,,Q2,91.7,0.338
+41860,,Q3,58.8,0.669
+41860,,Q4,63.1,1.059
+41860,,Q5,62.4,1.664
+42660,Majority Black,Q1,1006.4,-0.845
+42660,Majority Black,Q2,1565.2,-0.415
+42660,Majority Black,Q3,2829.3,-0.232
+42660,Majority Black,Q4,5013.9,-0.011
+42660,Majority Black,Q5,5652.1,0.277
+42660,Majority Hispanic,Q1,4361.5,-0.652
+42660,Majority Hispanic,Q2,4331,-0.356
+42660,Majority Hispanic,Q3,6354.8,-0.191
+42660,Majority Hispanic,Q4,8978.4,-0.049
+42660,Majority Hispanic,Q5,9999,0.175
+42660,Majority white (NH),Q1,622767.5,-0.508
+42660,Majority white (NH),Q2,627676.3,-0.117
+42660,Majority white (NH),Q3,627333.9,0.017
+42660,Majority white (NH),Q4,586103.5,0.118
+42660,Majority white (NH),Q5,667970.7,0.338
+42660,No majority,Q1,95178.8,-0.812
+42660,No majority,Q2,149831.7,-0.344
+42660,No majority,Q3,190779.4,-0.159
+42660,No majority,Q4,230632.7,-0.026
+42660,No majority,Q5,245769,0.229
+42660,,Q1,2.1,1.494
+42660,,Q2,0.8,1.316
+42660,,Q3,0.6,1.814
+42660,,Q4,0.2,4.109
+42660,,Q5,1.1,1.096
+45300,Majority Black,Q1,23874.7,-0.343
+45300,Majority Black,Q2,22898.2,-0.25
+45300,Majority Black,Q3,27365.1,-0.167
+45300,Majority Black,Q4,33498,-0.095
+45300,Majority Black,Q5,48410.1,0.118
+45300,Majority Hispanic,Q1,22297.6,-0.375
+45300,Majority Hispanic,Q2,31909.9,-0.175
+45300,Majority Hispanic,Q3,32288.1,-0.086
+45300,Majority Hispanic,Q4,34846.1,0.017
+45300,Majority Hispanic,Q5,40639.2,0.279
+45300,Majority white (NH),Q1,469211.3,-0.223
+45300,Majority white (NH),Q2,424826.9,-0.071
+45300,Majority white (NH),Q3,402891.5,0.016
+45300,Majority white (NH),Q4,407501.5,0.11
+45300,Majority white (NH),Q5,312185.4,0.315
+45300,No majority,Q1,77554.6,-0.3
+45300,No majority,Q2,92529.5,-0.144
+45300,No majority,Q3,87583,-0.046
+45300,No majority,Q4,112626.2,0.054
+45300,No majority,Q5,97901.5,0.335
+45300,,Q1,26.6,-0.454
+45300,,Q2,43.8,-0.236
+45300,,Q3,40.6,-0.173
+45300,,Q4,44.7,0.108
+45300,,Q5,48.5,0.285
+47900,Majority Black,Q1,223024.5,-0.366
+47900,Majority Black,Q2,149310.1,-0.124
+47900,Majority Black,Q3,150639.5,-0.013
+47900,Majority Black,Q4,248764.8,0.035
+47900,Majority Black,Q5,292224.6,0.138
+47900,Majority Hispanic,Q1,51769.4,-0.452
+47900,Majority Hispanic,Q2,65622.8,-0.167
+47900,Majority Hispanic,Q3,59839.5,-0.037
+47900,Majority Hispanic,Q4,53598.2,0.036
+47900,Majority Hispanic,Q5,46978.6,0.143
+47900,Majority white (NH),Q1,669630.2,-0.197
+47900,Majority white (NH),Q2,476859.3,-0.049
+47900,Majority white (NH),Q3,416894.3,0.026
+47900,Majority white (NH),Q4,401848.6,0.084
+47900,Majority white (NH),Q5,503614.2,0.198
+47900,No majority,Q1,394948.9,-0.352
+47900,No majority,Q2,426936.9,-0.105
+47900,No majority,Q3,359438.3,0.017
+47900,No majority,Q4,300776.7,0.095
+47900,No majority,Q5,253923.4,0.224
+47900,,Q1,87.1,-0.217
+47900,,Q2,62.2,-0.222
+47900,,Q3,42.8,-0.183
+47900,,Q4,33.5,-0.086
+47900,,Q5,50.8,0.194

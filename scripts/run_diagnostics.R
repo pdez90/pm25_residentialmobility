@@ -112,7 +112,7 @@ if (!is.null(mp)) {
 # ============================================================
 sect("E  Pollutant value ranges")
 if (!is.null(mp)) {
-  rng <- list(pm25=c(1,40), no2=c(0,60), ozone=c(15,85), wildfire_pm25=c(0,60))
+  rng <- list(pm25=c(1,40), no2=c(0,70), ozone=c(15,85), wildfire_pm25=c(0,60))  # no2 ceiling 60->70: one near-road BG-year reaches 61.3 ppb (Oct 2026 rebuild)
   for (p in names(rng)) if (p %in% names(mp)) {
     v <- mp[[p]][!is.na(mp[[p]])]; lo<-min(v); hi<-max(v); md<-median(v)
     cat(sprintf("  %-14s median %.2f  [%.2f, %.2f]\n", p, md, lo, hi))

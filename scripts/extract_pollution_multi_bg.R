@@ -7,7 +7,7 @@ if (!exists(".migrate_paths_loaded")) source(
 # ============================================================
 # BLOCK-GROUP MULTI-POLLUTANT PANEL
 #   pm25           WashU/ACAG V6.NA total PM2.5 (var "PM25")
-#   no2            figshare Global Surface NO2 (annual GeoTIFF)
+#   no2            Anenberg et al. 2022 Global Surface NO2 (annual NetCDF/GeoTIFF)
 #   wildfire_pm25  Childs et al. 2022 daily smokePM on a 10 km grid,
 #                  aggregated to an ANNUAL mean per grid cell (including
 #                  zero-smoke days) and mapped to block groups
@@ -40,7 +40,7 @@ dir.create(cache_dir, showWarnings=FALSE, recursive=TRUE)
 scratch   <- file.path(out_dir, "_terra_tmp_multi"); dir.create(scratch, showWarnings=FALSE, recursive=TRUE)
 terraOptions(tempdir=scratch, memfrac=0.6, progress=0)
 YEARS <- 2006:2019; BG_VINTAGE <- 2019; CHUNK_STATES <- TRUE
-NO2_PATTERN <- "\\.tif$"
+NO2_PATTERN <- "\\.(tif|nc)$"   # GWU Box release is NetCDF (YYYY_final_1km.nc); GeoTIFF also accepted
 
 first_existing <- function(nms, cands){ h<-intersect(cands,nms); if(length(h)) h[1] else NA_character_ }
 

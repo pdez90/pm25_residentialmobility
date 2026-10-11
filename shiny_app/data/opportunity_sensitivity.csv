@@ -1,0 +1,7 @@
+variant,white,black,hisp,black_white_ratio
+2.5x income (own),0.203,0.086,0.095,0.42
+"3x income (own, main)",0.26,0.124,0.127,0.48
+4x income (own),0.344,0.197,0.187,0.57
+5x income (own),0.396,0.258,0.239,0.65
+Rent <=30% income,0.343,0.172,0.195,0.5
+Clean=cleanest quartile (own 3x),0.13,0.061,0.065,0.47

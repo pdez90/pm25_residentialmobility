@@ -1,0 +1,5 @@
+spec,black_gap,black_se,hisp_gap,hisp_se
+majority > 50%,0.1182,0.011,0.0813,0.0272
+majority > 60%,0.1308,0.0126,0.096,0.0333
+majority > 70%,0.1359,0.0146,0.1032,0.0386
+continuous (per 0->1 share),0.1857,0.0172,0.1201,0.0498

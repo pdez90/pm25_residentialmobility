@@ -25,3 +25,11 @@ naaqs/
 # default location if MIGRATE_DATA_DIR is unset
 data/
 renv/library/
+
+# the Shiny app ships its own small summary tables
+!shiny_app/data/
+!shiny_app/data/*.csv
+
+# local run logs and transfer archives
+*.log
+*.tgz
