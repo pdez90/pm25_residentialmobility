@@ -20,6 +20,7 @@ bash shiny_app/refresh_data.sh              # copies every output CSV under 50 K
 Rscript scripts/build_app_metro_data.R      # metro explorer: map + Sankey tables for the 30 largest metros (~20 min)
 Rscript scripts/build_app_metro_pc.R        # principal-city markers (1 min)
 Rscript scripts/build_app_metro_gaps.R      # metro-specific adjusted gaps (2-3 min)
+Rscript scripts/build_od_parquet.R          # national origin-destination Parquet for 'Trace a neighbourhood' (~40 min)
 ```
 
 ## Publish to Posit Connect Cloud (free tier is enough)
@@ -49,3 +50,21 @@ statement next to the repository link.
 rsconnect::setAccountInfo(name="<account>", token="<token>", secret="<secret>")   # from shinyapps.io dashboard
 rsconnect::deployApp("shiny_app", appName="pm25-residential-mobility")
 ```
+
+## "Trace a neighbourhood" (national origin-destination flows)
+
+The full flows (~23 GB CSV) are not bundled. `scripts/build_od_parquet.R` packs
+them as one Parquet file per year (sorted by origin, ~1 GB each, every modelled flow kept) in
+`app_od/`, plus a small `shiny_app/data/bg_attr.parquet`. Host the yearly files
+anywhere that serves HTTP range requests and point the app at them:
+
+```bash
+gh release create od-v1 app_od/od_*.parquet --repo pdez90/pm25_residentialmobility \
+   -t "Origin-destination flows (Parquet) for the results explorer"
+```
+
+Then in Connect Cloud → the app → Settings → Environment variables add
+`OD_PARQUET_BASE = https://github.com/pdez90/pm25_residentialmobility/releases/download/od-v1`
+and add `duckdb` and `arrow` to the manifest (`install.packages(c("duckdb","arrow"))`, then
+`rsconnect::writeManifest("shiny_app")`). The tab stays hidden until the variable is set.
+DuckDB reads only the row groups for the clicked origin (a few MB per click).

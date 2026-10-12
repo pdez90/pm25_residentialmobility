@@ -33,3 +33,8 @@ renv/library/
 # local run logs and transfer archives
 *.log
 *.tgz
+
+# national OD parquet files are hosted as release assets, never committed
+app_od/
+*.parquet
+!shiny_app/data/bg_attr.parquet

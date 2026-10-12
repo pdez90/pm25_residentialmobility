@@ -76,7 +76,7 @@ for (yr in migrate_years) {
   acc_m[[as.character(yr)]] <- x[, .(moves=sum(flow)), by=.(cbsa=o_cbsa)]
   acc_o[[as.character(yr)]] <- x[, .(out_moves=sum(flow), re_sum=sum(flow*re)), by=.(cbsa=o_cbsa, geoid_bg=origin_bg)]
   acc_d[[as.character(yr)]] <- x[, .(in_moves=sum(flow), opm_sum=sum(flow*o_pm25)), by=.(cbsa=d_cbsa, dest_bg, o_race)]
-  acc_s[[as.character(yr)]] <- x[, .(moves=sum(flow), re_sum=sum(flow*re)), by=.(cbsa=o_cbsa, o_race, dest_q=paste0("Q", d_q))]
+  acc_s[[as.character(yr)]] <- x[, .(year=yr, moves=sum(flow), re_sum=sum(flow*re), dpm_sum=sum(flow*d_pm25), opm_sum=sum(flow*o_pm25)), by=.(cbsa=o_cbsa, o_race, dest_q=paste0("Q", d_q))]
   rm(x); gc()
 }
 mm <- rbindlist(acc_m)[, .(moves=sum(moves)), by=cbsa][order(-moves)]
@@ -97,8 +97,14 @@ d  <- merge(d, mbg[, .(dest_bg=geoid_bg, lon, lat, dest_pm25=pm25_2019)], by="de
 d[, `:=`(in_moves=round(in_moves,1), origin_pm25=round(origin_pm25,2))]
 fwrite(d, file.path(app_dir,"metro_dest.csv"))
 
-s  <- rbindlist(acc_s)[cbsa %in% top$cbsa, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3)), by=.(cbsa, o_race, dest_q)]
+sy <- rbindlist(acc_s)[cbsa %in% top$cbsa]
+s  <- sy[, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3)), by=.(cbsa, o_race, dest_q)]
 fwrite(s[order(cbsa, o_race, dest_q)], file.path(app_dir,"metro_sankey.csv"))
+# by year: quintile flows, and a per-year summary per origin group (for the trend chart)
+fwrite(sy[, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3)), by=.(cbsa, year, o_race, dest_q)][order(cbsa, year, o_race, dest_q)], file.path(app_dir,"metro_sankey_year.csv"))
+my <- sy[, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3), dest_pm25=round(sum(dpm_sum)/sum(moves),2), orig_pm25=round(sum(opm_sum)/sum(moves),2),
+             share_dirtiest2=round(sum(moves[dest_q %in% c("Q4","Q5")])/sum(moves),3), share_cleanest2=round(sum(moves[dest_q %in% c("Q1","Q2")])/sum(moves),3)), by=.(cbsa, year, o_race)]
+fwrite(my[order(cbsa, year, o_race)], file.path(app_dir,"metro_year.csv"))
 
 ml <- merge(top, cbn[, .(cbsa, name)], by="cbsa", all.x=TRUE)
 ml <- merge(ml, mbg[, .(lon=mean(lon), lat=mean(lat), n_bg=.N), by=cbsa], by="cbsa")
@@ -114,4 +120,4 @@ if (file.exists(pcf)) {
     fwrite(pcs[, .(cbsa, principal_city, lon, lat)], file.path(app_dir,"metro_principal_city.csv")) }
 }
 cat(sprintf("\nDONE. metro_bg %d rows, metro_dest %d rows, metro_sankey %d rows -> %s\n", nrow(mbg), nrow(d), nrow(s), app_dir))
-for (f in c("metro_bg.csv","metro_dest.csv","metro_sankey.csv","metro_list.csv")) cat(sprintf("  %-18s %6.1f MB\n", f, file.size(file.path(app_dir,f))/1e6))
+for (f in c("metro_bg.csv","metro_dest.csv","metro_sankey.csv","metro_sankey_year.csv","metro_year.csv","metro_list.csv")) cat(sprintf("  %-18s %6.1f MB\n", f, file.size(file.path(app_dir,f))/1e6))
