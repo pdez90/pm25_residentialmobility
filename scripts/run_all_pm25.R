@@ -86,7 +86,7 @@ main <- function() {
 
   # ---- one-time dependency check + version log ----
   need <- c("data.table","stringr","fixest","splines","ggplot2","ggrepel","sf","terra",
-            "exactextractr","tigris","tidycensus","readxl","ggalluvial","foreign")
+            "exactextractr","tigris","tidycensus","readxl","ggalluvial","foreign","lubridate")
   miss <- need[!vapply(need, requireNamespace, logical(1), quietly = TRUE)]
   if (length(miss)) { cat("Installing: ", paste(miss, collapse=", "), "\n")
                       install.packages(miss, repos = "https://cloud.r-project.org") }

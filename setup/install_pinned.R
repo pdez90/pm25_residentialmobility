@@ -21,7 +21,8 @@ pkgs <- c(
   tidycensus    = "1.7.1",
   readxl        = "1.4.5",
   ggalluvial    = "0.12.6",
-  foreign       = "0.8.90"
+  foreign       = "0.8.90",
+  lubridate     = "1.9.4"
 )
 if (!requireNamespace("remotes", quietly = TRUE))
   install.packages("remotes", repos = "https://cloud.r-project.org")

@@ -15,7 +15,11 @@ suppressPackageStartupMessages({
 })
 
 # ---------- data ----------
-rd <- function(f) { p <- file.path("data", f); if (file.exists(p)) fread(p) else NULL }
+rd <- function(f) {   # block-group ids are read as character so leading zeros (CO, CA, AZ, ...) survive
+  p <- file.path("data", f); if (!file.exists(p)) return(NULL)
+  idc <- intersect(c("geoid_bg", "dest_bg", "origin_bg", "cbsa"), names(fread(p, nrows=0)))
+  if (length(idc)) fread(p, colClasses=setNames(rep("character", length(idc)), idc)) else fread(p)
+}
 D <- list(
   trends = rd("multipollutant_disparity_trends.csv"), decomp = rd("multipollutant_decomposition.csv"),
   expdec = rd("exposure_decomposition.csv"), cond = rd("conditional_models_all_fe.csv"),
@@ -73,7 +77,7 @@ if (!is.null(D$trends)) { t <- D$trends[pollutant=="pm25"]; h$b11 <- t[year==201
 if (!is.null(D$decomp)) { d <- D$decomp[pollutant=="pm25" & gap=="Black - White"]; h$cleanup <- d$cleanup; h$sorting <- d$sorting }
 if (!is.null(D$gelbach)) h$gelbach <- D$gelbach[group=="Black"]$pct_total
 if (!is.null(D$opp)) { h$opp_b <- D$opp[o_race=="Majority Black"]$opp; h$opp_w <- D$opp[o_race=="Majority white (NH)"]$opp }
-if (!is.null(D$sub)) { s <- D$sub[dimension=="o_race_majority"]; h$avoid_w <- s[subgroup=="Majority white (NH)"]$avoidance; h$orig_w <- s[subgroup=="Majority white (NH)"]$orig_pm25; h$orig_b <- s[subgroup=="Majority Black"]$orig_pm25 }
+if (!is.null(D$sub)) { s <- D$sub[dimension=="race_majority"]; h$avoid_w <- s[, sum(avoidance*flow)/sum(flow)]; h$orig_w <- s[subgroup=="Majority white (NH)"]$orig_pm25; h$orig_b <- s[subgroup=="Majority Black"]$orig_pm25 }
 if (!is.null(D$segq)) { h$seg_lo <- D$segq[1]$black_gap; h$seg_hi <- D$segq[.N]$black_gap }
 
 # ---------- reusable UI pieces ----------
@@ -138,7 +142,8 @@ p_cond <- function(fe_sel) {
     labs(x="Extra PM2.5 at destination vs. movers from majority-white origins (µg/m³, 95% CI)", y=NULL) + theme_app()
 }
 p_cross <- function(grp_sel, sd=TRUE) {
-  d <- copy(D$cross)[group==grp_sel]
+  d <- copy(D$cross)[group %in% c(grp_sel, paste(grp_sel, "share"), "Minority in-migrant share")]
+  d[, group := NULL]
   if (sd) { d[, `:=`(e=est_sd, s=se_sd)]; xl <- "Estimate, national SD units (comparable across pollutants)" } else { d[, `:=`(e=est, s=se)]; xl <- "Estimate, native units" }
   d[, `:=`(lo=e-1.96*s, hi=e+1.96*s, pgrp=PGRP[pollutant], sig=fifelse(p < 0.05, "p < 0.05", "not distinguishable from 0"))]
   ord <- c("no2","bc","om","pm25","no3","so4","ozone","wildfire_pm25")
@@ -415,7 +420,7 @@ ui <- page_navbar(
         radioButtons("od_rule", "Affordability screen (benchmark)", if (HAS_RENT) RULES else RULES[RULES != "rent"], selected="3"),
         p(class="small text-muted", "3× income is the rule used in the paper. In expensive metros it screens out most of the metro; the looser rules and the rent rule show how much the benchmark depends on that choice (paper Table S17)."),
         checkboxInput("od_showopp", "After clicking: outline the price-screened block groups that are also cleaner than the metro median", TRUE),
-        p(class="small text-muted", "Click any block group on the map to see where the estimated out-movers in the selected year went. Origins are coloured by PM2.5 in that year; destinations appear as circles sized by estimated movers, with lines to the origin (the 400 largest destinations are drawn; the charts and numbers use all of them). The year selector changes everything on this tab."),
+        p(class="small text-muted", "Click any block group on the map to see where the estimated out-movers in the selected year went. Origins are coloured by PM2.5 in that year; destinations appear as circles sized by estimated movers, with lines to the origin (the 400 largest destinations are drawn as circles, the 150 largest also with lines; the charts and numbers use all of them). The year selector changes everything on this tab."),
         uiOutput("od_share")),
       card(full_screen=TRUE, card_header(textOutput("od_title")), leafletOutput("od_map", height="600px")),
       layout_columns(col_widths=c(5,7),
@@ -472,7 +477,7 @@ server <- function(input, output, session) {
   small <- function(d) { ci(d); ggplot(d, aes(est, spec)) + geom_vline(xintercept=0, linetype=2, colour="grey50") + geom_errorbar(aes(xmin=lo, xmax=hi), width=0.2) + geom_point(size=2.5, colour="#B2403A") + labs(x="Black gap (µg/m³)", y=NULL) + theme_app() }
   output$cg_thresh <- renderPlotly({ req(D$thresh); ggplotly(small(D$thresh[, .(spec, est=black_gap, se=black_se)])) |> hleg() })
   output$cg_select <- renderPlotly({ req(D$select); d <- D$select[group=="Black"]; d[, spec := factor(spec, levels=c("all","within_cbsa","short_dist","plus_dist"), labels=c("All moves","Within metro","≤ 50 km","+ distance control"))]; ggplotly(small(d)) |> hleg() })
-  output$cg_raw <- renderDT({ req(D$sub); d <- D$sub[dimension=="o_race_majority", .(`Origin neighbourhood`=subgroup, `Mean origin PM2.5`=round(orig_pm25,2), `Mean change at destination`=round(mean_change,3), `Moves (millions)`=round(flow/1e6,1))]; datatable(d, options=list(dom="t"), rownames=FALSE) })
+  output$cg_raw <- renderDT({ req(D$sub); d <- D$sub[dimension=="race_majority", .(`Origin neighbourhood`=subgroup, `Mean origin PM2.5`=round(orig_pm25,2), `Mean change at destination`=round(mean_change,3), `Moves (millions)`=round(flow/1e6,1))]; datatable(d, options=list(dom="t"), rownames=FALSE) })
   output$cg_meerr <- renderPlotly({ req(D$meerr); ggplotly(small(D$meerr[, .(spec, est=Black, se=Black_se)])) |> hleg() })
   output$r1_plot <- renderPlotly({ req(HAS_R1); ggplotly(p_r1()) |> hleg() })
   output$r1_odfe <- renderDT({ req(D$r1_odfe); datatable(D$r1_odfe[group=="Majority Black", .(Specification=spec, `Black gap`=round(est,3), `95% CI`=sprintf("%.3f to %.3f", lo, hi))], options=list(dom="t"), rownames=FALSE) })
@@ -517,7 +522,7 @@ server <- function(input, output, session) {
                 hovertemplate="%{customdata}<extra></extra>")) |> layout(font=list(size=12), margin=list(l=10, r=10, t=10, b=10)) |> config(displaylogo=FALSE)
   })
   output$me_table <- renderDT({
-    req(HAS_METRO, input$me_cbsa); b <- D$mbg[cbsa==input$me_cbsa & out_moves > 0]
+    req(HAS_METRO, input$me_cbsa); b <- D$mbg[cbsa==input$me_cbsa & out_moves > 0 & !is.na(race_majority) & race_majority != ""]
     t <- b[, .(`Block groups`=.N, `Out-moves`=format(round(sum(out_moves)), big.mark=","), `Mean PM2.5 2019`=round(weighted.mean(pm25_2019, out_moves, na.rm=TRUE), 2),
               `Mean Δ PM2.5 of out-movers`=round(weighted.mean(re_pm25, out_moves, na.rm=TRUE), 3)), by=.(`Origin majority`=race_majority)][order(`Origin majority`)]
     datatable(t, options=list(dom="t"), rownames=FALSE)
@@ -536,7 +541,7 @@ server <- function(input, output, session) {
       addLegend("bottomleft", pal=pal, values=b$pm, title=sprintf("PM2.5, %s (µg/m³)", yr), opacity=0.8)
     for (k in input$od_hl) { hb <- b[get(mjc)==k]; if (nrow(hb)) m <- m |> addCircleMarkers(data=hb, lng=~lon, lat=~lat, radius=7, stroke=TRUE, color=c(B=GRP_COL[["Black"]], W=GRP_COL[["White"]], H=GRP_COL[["Hispanic"]])[[k]], weight=1.2, fill=FALSE, opacity=0.6) }
     sel <- isolate(od_sel())
-    if (!is.null(sel) && BGA[geoid_bg==sel]$cbsa %in% input$od_cbsa) { f <- tryCatch(isolate(od_flows()), error=function(e) NULL); if (!is.null(f)) m <- add_trace(m, f, BGA[geoid_bg==sel], yr) }
+    if (!is.null(sel) && BGA[geoid_bg==sel]$cbsa %in% input$od_cbsa) { f <- tryCatch(isolate(od_flows()), error=function(e) NULL); if (!is.null(f)) m <- add_trace_layer(m, f, BGA[geoid_bg==sel], yr) }
     m
   })
   observeEvent(input$od_map_marker_click, { id <- input$od_map_marker_click$id; if (!is.null(id) && grepl("^[0-9]{12}$", id)) od_sel(id) })
@@ -546,7 +551,7 @@ server <- function(input, output, session) {
     f <- merge(f, BGA[, .(dest_bg=geoid_bg, lon, lat, cbsa, pm=get(paste0("pm25_", yr)), mj=MAJ_LAB[get(paste0("maj_", yr))])], by="dest_bg", all.x=TRUE)
     f[order(-flow)]
   })
-  add_trace <- function(m, f, o, yr) {
+  add_trace_layer <- function(m, f, o, yr) {
     if (!nrow(f)) return(m)
     fw <- f[!is.na(lon)][order(-flow)][1:min(.N, 400)]        # draw the 400 largest destinations; the summary and charts use all of them
     for (i in seq_len(min(nrow(fw), 150))) m <- m |> addPolylines(lng=c(o$lon, fw$lon[i]), lat=c(o$lat, fw$lat[i]), weight=pmax(0.5, log1p(fw$flow[i])), color="#444", opacity=0.3, group="trace")
@@ -556,7 +561,7 @@ server <- function(input, output, session) {
   }
   observe({
     f <- od_flows(); o <- BGA[geoid_bg==od_sel()]; yr <- input$od_year; req(nrow(o))
-    leafletProxy("od_map") |> clearGroup("trace") |> add_trace(f, o, yr)
+    leafletProxy("od_map") |> clearGroup("trace") |> add_trace_layer(f, o, yr)
   })
   od_rule <- reactive({ r <- input$od_rule; if (is.null(r) || !r %in% RULES) "3" else r })
   od_reach <- reactive({
@@ -689,8 +694,8 @@ server <- function(input, output, session) {
   }
   observeEvent(session$clientData$url_search, { q <- parseQueryString(session$clientData$url_search); if (length(q)) apply_query(q) }, once=TRUE)
 
-  tb <- reactive({ req(input$tb_file); fread(file.path("data", input$tb_file)) })
-  output$tb_dt <- renderDT(datatable(tb(), options=list(pageLength=15, scrollX=TRUE), rownames=FALSE) |> formatRound(names(tb())[sapply(tb(), is.numeric)], 4))
+  tb <- reactive({ req(input$tb_file %in% list.files("data", pattern="\\.csv$")); rd(input$tb_file) })
+  output$tb_dt <- renderDT({ x <- tb(); dbl <- names(x)[sapply(x, function(v) is.double(v) && any(v != round(v), na.rm=TRUE))]; datatable(x, options=list(pageLength=15, scrollX=TRUE), rownames=FALSE) |> formatRound(dbl, 4) })
   output$tb_dl <- downloadHandler(filename=function() input$tb_file, content=function(f) fwrite(tb(), f))
 }
 

@@ -15,15 +15,27 @@
       "Source": "Repository",
       "Repository": "CRAN"
     },
-    "stringr": {
-      "Package": "stringr",
-      "Version": "1.6.0",
+    "exactextractr": {
+      "Package": "exactextractr",
+      "Version": "0.10.0",
       "Source": "Repository",
       "Repository": "CRAN"
     },
     "fixest": {
       "Package": "fixest",
       "Version": "0.13.2",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "foreign": {
+      "Package": "foreign",
+      "Version": "0.8.90",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "ggalluvial": {
+      "Package": "ggalluvial",
+      "Version": "0.12.6",
       "Source": "Repository",
       "Repository": "CRAN"
     },
@@ -39,9 +51,33 @@
       "Source": "Repository",
       "Repository": "CRAN"
     },
+    "lubridate": {
+      "Package": "lubridate",
+      "Version": "1.9.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "generics",
+        "methods",
+        "timechange"
+      ]
+    },
+    "readxl": {
+      "Package": "readxl",
+      "Version": "1.4.5",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
     "sf": {
       "Package": "sf",
       "Version": "1.0.21",
+      "Source": "Repository",
+      "Repository": "CRAN"
+    },
+    "stringr": {
+      "Package": "stringr",
+      "Version": "1.6.0",
       "Source": "Repository",
       "Repository": "CRAN"
     },
@@ -51,9 +87,9 @@
       "Source": "Repository",
       "Repository": "CRAN"
     },
-    "exactextractr": {
-      "Package": "exactextractr",
-      "Version": "0.10.0",
+    "tidycensus": {
+      "Package": "tidycensus",
+      "Version": "1.7.1",
       "Source": "Repository",
       "Repository": "CRAN"
     },
@@ -63,29 +99,15 @@
       "Source": "Repository",
       "Repository": "CRAN"
     },
-    "tidycensus": {
-      "Package": "tidycensus",
-      "Version": "1.7.1",
+    "timechange": {
+      "Package": "timechange",
+      "Version": "0.3.0",
       "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "readxl": {
-      "Package": "readxl",
-      "Version": "1.4.5",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "ggalluvial": {
-      "Package": "ggalluvial",
-      "Version": "0.12.6",
-      "Source": "Repository",
-      "Repository": "CRAN"
-    },
-    "foreign": {
-      "Package": "foreign",
-      "Version": "0.8.90",
-      "Source": "Repository",
-      "Repository": "CRAN"
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cpp11"
+      ]
     }
   }
 }

@@ -1,6 +1,8 @@
 # Residential mobility and environmental-opportunity inequality
 
-Analysis code for *Residential Mobility Reproduces Environmental-Opportunity Inequality through Housing Markets: Evidence from national migration flows and multi-pollutant exposure, 2011–2019.*
+Analysis code for *Residential Mobility and the Reproduction of Environmental-Opportunity Inequality: Evidence from National Migration Flows and Multi-Pollutant Exposure, 2011–2019* (Sustainability, in revision).
+
+**Interactive results explorer:** https://01a12bbc-84a4-a651-2a33-53f591fca244.share.connect.posit.cloud/ — every chart in the paper, a metro explorer for the 30 largest metropolitan areas (maps, quintile transition matrices, flows) and a block-group-level origin–destination tracer for 2011–2019. Source in `shiny_app/` (see `shiny_app/README.md`).
 
 Priyanka N. deSouza — Department of Urban and Regional Planning, University of Colorado Denver; CU Population Center, University of Colorado Boulder.
 
@@ -99,19 +101,22 @@ Stages, in order: PM2.5 panel → speciated components → multi-pollutant panel
 | Sorting and unequal cleanup, robustness | `pm25_sorting_vs_siting.R` |
 | Gelbach affordability decomposition, selection and uncertainty checks | `affordability_robustness.R`, `gelbach_from_cache.R` |
 | Opportunity set and segregation gradient | `opportunity_heterogeneity.R` |
-| Individual-level replication | `acs_ipums_pull.R` → `build_puma_migpuma_xwalk.R` → `acs_micro_validation.R` |
+| Individual-level analysis (ACS microdata) | `acs_ipums_pull.R` → `build_puma_migpuma_xwalk.R` → `acs_micro_validation.R` |
 | Specification ladder | `spec_ladder.R` |
 | Causal-structure diagram | `dag_figure.R` |
 | Block-group area vs. grid resolution | `blockgroup_area_summary.R` |
 | Descriptive maps and migration Sankey diagrams | `descriptive_maps_si.R`, `national_maps_si.R`, `pollution_sankey.R` |
 | Exploratory nonattainment analysis | `build_greenbook.R` → `naaqs_nonattainment.R` |
 | Revision (Reviewer 1): urban core/suburb/periphery O–D matrix, O–D-type fixed effects, gap by move-distance band | `reviewer1_urban_form_distance.R` (run after `run_main.R`) |
+| Revision (Reviewer 3): CBSA cluster count, unweighted estimates for Table 1 / Table S4 | `revision_extras.R` (run after `run_main.R`) |
+| Results explorer data: metro tables, principal cities, metro-specific gaps, national OD Parquet | `build_app_metro_data.R`, `build_app_metro_pc.R`, `build_app_metro_gaps.R`, `build_od_parquet.R` (run after `reviewer1_urban_form_distance.R`; see `shiny_app/README.md`) |
+| Pre-2015 PM2.5 coverage diagnostic (standalone) | `check_coverage.R` |
 
 `idea2_pm25_avoidance.R` builds the origin-year reallocation panel and subgroup summaries that `idea2_pm25_avoidance_v3.R` and later stages consume; both are required, and the driver runs them in that order.
 
 ## Interpretation notes
 
-Contrasts in the flow analysis are defined by the racial and ethnic composition of the **origin neighborhood**, not the race of individual movers: MIGRATE is not disaggregated by race. Statements from that analysis are of the form "streams leaving majority-Black neighborhoods reached…". Individual-level racial statements rest on the ACS microdata replication, at coarser migration-PUMA resolution.
+Contrasts in the flow analysis are defined by the racial and ethnic composition of the **origin neighborhood**, not the race of individual movers: MIGRATE is not disaggregated by race. Statements from that analysis are of the form "streams leaving majority-Black neighborhoods reached…". Individual-level racial statements rest on the ACS microdata analysis, at coarser migration-PUMA resolution; it is supportive evidence on the same qualitative contrast, not a re-estimation of the main model.
 
 Destination housing cost is a post-move, chosen quantity. The Gelbach decomposition is therefore a descriptive attribution, not causal mediation.
 
