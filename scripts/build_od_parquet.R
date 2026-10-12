@@ -59,7 +59,7 @@ cat(sprintf("bg_attr.parquet: %d block groups, %.1f MB\n", nrow(attr_), file.siz
 for (yr in 2011:2019) {
   cat("MIGRATE", yr, "... ")
   x <- fread(file.path(mig_dir, paste0(yr,".csv")), select=c("Origin","Destination","Flow"))
-  tot <- sum(x$Flow)
+  tot <- sum(x$Flow[x$Origin != x$Destination])       # moves only: MIGRATE also carries stayers as Origin == Destination
   x <- x[Flow > MIN_FLOW & Origin != Destination]
   x[, `:=`(Origin=pad_bg(Origin), Destination=pad_bg(Destination), Flow=round(as.numeric(Flow), 2))]
   setorder(x, Origin)
