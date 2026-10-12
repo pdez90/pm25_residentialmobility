@@ -38,3 +38,6 @@ renv/library/
 app_od/
 *.parquet
 !shiny_app/data/bg_attr.parquet
+
+# local scratch
+_to_delete/

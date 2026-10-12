@@ -157,7 +157,9 @@ p_cross <- function(grp_sel, sd=TRUE) {
 }
 p_gelbach <- function() {
   m <- melt(D$gelbach[, .(group, `Home value`=pct_homeval, `Gross rent`=pct_rent)], id.vars="group", variable.name="cov", value.name="pct")
-  ggplot(m, aes(group, pct, fill=cov)) + geom_col() + scale_fill_manual(values=c(`Home value`="#3B6FA0", `Gross rent`="#D98E2B")) +
+  tot <- m[, .(pct=sum(pct)), by=group]
+  ggplot(m, aes(group, pct, fill=cov)) + geom_col() + geom_text(data=tot, aes(group, pct, label=sprintf("%.2f%% of the gap", pct)), inherit.aes=FALSE, vjust=-0.6, size=3.6) +
+    scale_fill_manual(values=c(`Home value`="#3B6FA0", `Gross rent`="#D98E2B")) +
     scale_y_continuous(limits=c(0, 100)) + labs(x="Origin group", y="% of the gap explained (out of 100)", fill=NULL) + theme_app()
 }
 p_seg <- function() {
@@ -197,7 +199,7 @@ p_quint <- function(cb, yr="all") {
   ggplot(s, aes(dest_q, 100*share, fill=o_race, text=sprintf("%s → %s<br>%.0f%% of this group's moves<br>mean Δ PM2.5 %+.2f µg/m³", o_race, dest_q, 100*share, re_pm25))) +
     geom_col(position=position_dodge(width=0.75), width=0.7) +
     scale_fill_manual(values=c(`Black-majority origins`=GRP_COL[["Black"]], `Hispanic-majority origins`=GRP_COL[["Hispanic"]], `White-majority origins`=GRP_COL[["White"]])) +
-    labs(x="Destination block group's PM2.5 quintile within this metro (2019)", y="% of the group's within-metro moves", fill=NULL) + theme_app()
+    labs(x="Destination block group's PM2.5 quintile within this metro (selected year)", y="% of the group's within-metro moves", fill=NULL) + theme_app()
 }
 p_transition <- function(cb, yr="all") {
   t <- D$mtr[cbsa==cb & year==yr & o_race %in% c("Majority Black","Majority white (NH)","Majority Hispanic")]
@@ -338,7 +340,7 @@ ui <- page_navbar(
         tagList(plotlyOutput("r1_plot", height="380px"),
           unitnote("Unit: origin block-group-years split by the type of destination reached (left) or by distance moved (right); separate models in each subset, same controls as above.")),
         tagList(
-          p("Moves out of the urban core deliver the largest exposure gains for every group — but movers from majority-Black core neighbourhoods make those moves less often (66% of their within-metro moves stay in the core, versus 52% for majority-white). Comparing only movers making the same ", em("kind"), " of move (origin type × destination type) cuts the gap from 0.119 to 0.069 µg/m³: roughly 40% of the disparity is associated with lower decentralisation, and a remaining disparity persists within comparable origin–destination types."),
+          p("Moves out of the urban core deliver the largest exposure gains for every group — but movers from majority-Black core neighbourhoods make those moves less often (66% of the moves leaving majority-Black core neighbourhoods end in the core, versus 52% for majority-white). Comparing only movers making the same ", em("kind"), " of move (origin type × destination type) cuts the gap from 0.119 to 0.069 µg/m³: roughly 40% of the disparity is associated with lower decentralisation, and a remaining disparity persists within comparable origin–destination types."),
           p("Movers from majority-Black neighbourhoods also move shorter distances (median 8 km vs 15 km). The gap is present for local moves under 10 km and largest for moves over 200 km, which mostly cross metropolitan boundaries. The data do not reveal why any household moved."),
           DTOutput("r1_odfe"))),
       how("How was this estimated?", p("Block groups are classified as urban core (inside the metro's principal city), inner suburb (same county as the principal city or within 15 km of its centre), periphery (rest of the metro), micropolitan or non-metropolitan. The main model is re-estimated with destination-type and origin×destination-type fixed effects, and separately within distance bands using great-circle distance between block-group centroids. Source tables: ", code("r1_*.csv"), "; script ", code("scripts/reviewer1_urban_form_distance.R"), ".")))
