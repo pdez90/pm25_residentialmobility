@@ -7,7 +7,12 @@
 if (!exists(".migrate_paths_loaded")) source(if (file.exists("scripts/_paths.R")) "scripts/_paths.R" else "_paths.R")
 suppressPackageStartupMessages({ library(data.table); library(fixest); library(splines) })
 base_dir <- migrate_data_dir(); out_dir <- file.path(base_dir, "pm25_avoidance_lag3_olag1")
-oy <- fread(file.path(out_dir, "origin_year_pm25_reallocation.csv"), colClasses=c(origin_bg="character"))
+oy <- fread(file.path(out_dir, "origin_year_pm25_reallocation.csv"), colClasses=c(origin_bg="character", o_state_county="character"))
+if (!"o_county" %in% names(oy)) oy[, o_county := stringr::str_pad(o_state_county, 5, pad="0")]
+if (!"o_cbsa" %in% names(oy)) {
+  cxw <- fread(file.path(base_dir, "pollution_bg", "county_cbsa_xwalk.csv"), colClasses=c(county="character", cbsa="character"))
+  oy <- merge(oy, unique(cxw, by="county")[, .(o_county=county, o_cbsa=cbsa)], by="o_county", all.x=TRUE); oy[is.na(o_cbsa), o_cbsa := paste0("nonmetro_", o_county)]
+}
 d <- oy[!is.na(o_race_majority) & out_flow > 0 & !is.na(o_med_hh_income) & o_med_hh_income > 0 & !is.na(orig_pm25) & !is.na(re_pm25)]
 d[, grp := relevel(factor(o_race_majority), ref="Majority white (NH)")]
 f <- re_pm25 ~ grp + ns(orig_pm25,4) + log(o_med_hh_income) + o_poverty_pct + o_bach_pct | o_cbsa + year
