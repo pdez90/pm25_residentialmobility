@@ -26,9 +26,9 @@ D <- list(
   segmp = rd("multipollutant_segregation.csv"), sub = rd("avoidance_by_subgroup.csv"),
   r1_band = rd("r1_gap_by_distance_band.csv"), r1_dest = rd("r1_black_gap_by_dest_type.csv"),
   r1_odfe = rd("r1_gap_od_type_fe.csv"), r1_mat = rd("r1_od_type_matrix.csv"), r1_dist = rd("r1_distance_distribution_by_group.csv"),
-  mlist = rd("metro_list.csv"), mbg = rd("metro_bg.csv"), mdest = rd("metro_dest.csv"), msank = rd("metro_sankey.csv"), mpc = rd("metro_principal_city.csv")
+  mlist = rd("metro_list.csv"), mbg = rd("metro_bg.csv"), mdest = rd("metro_dest.csv"), msank = rd("metro_sankey.csv"), mpc = rd("metro_principal_city.csv"), mgap = rd("metro_gap.csv")
 )
-for (k in c("mlist","mbg","mdest","msank","mpc")) if (!is.null(D[[k]])) D[[k]][, cbsa := as.character(cbsa)]
+for (k in c("mlist","mbg","mdest","msank","mpc","mgap")) if (!is.null(D[[k]])) D[[k]][, cbsa := as.character(cbsa)]
 if (!is.null(D$mbg)) D$mbg[, geoid_bg := as.character(geoid_bg)]
 HAS_METRO <- !is.null(D$mbg) && !is.null(D$mlist) && !is.null(D$msank)
 HAS_R1    <- !is.null(D$r1_band) && !is.null(D$r1_dest)
@@ -153,6 +153,23 @@ p_r1 <- function() {
     facet_wrap(~panel, scales="free_x") + labs(x=NULL, y="Black gap (µg/m³, 95% CI)") + theme_app() + theme(axis.text.x=element_text(angle=20, hjust=1))
 }
 
+p_quint <- function(cb) {
+  s <- D$msank[cbsa==cb & o_race %in% c("Majority Black","Majority white (NH)","Majority Hispanic")]
+  s[, share := moves/sum(moves), by=o_race]
+  s[, o_race := factor(o_race, levels=c("Majority Black","Majority Hispanic","Majority white (NH)"), labels=c("Black-majority origins","Hispanic-majority origins","White-majority origins"))]
+  s[, dest_q := factor(dest_q, levels=paste0("Q",1:5), labels=c("Q1 cleanest","Q2","Q3","Q4","Q5 dirtiest"))]
+  ggplot(s, aes(dest_q, 100*share, fill=o_race, text=sprintf("%s → %s<br>%.0f%% of this group's moves<br>mean Δ PM2.5 %+.2f µg/m³", o_race, dest_q, 100*share, re_pm25))) +
+    geom_col(position=position_dodge(width=0.75), width=0.7) +
+    scale_fill_manual(values=c(`Black-majority origins`=GRP_COL[["Black"]], `Hispanic-majority origins`=GRP_COL[["Hispanic"]], `White-majority origins`=GRP_COL[["White"]])) +
+    labs(x="Destination block group's PM2.5 quintile within this metro (2019)", y="% of the group's within-metro moves", fill=NULL) + theme_app()
+}
+metro_gap_text <- function(cb) {
+  if (is.null(D$mgap)) return(NULL); g <- D$mgap[cbsa==cb & group=="Majority Black"]; if (!nrow(g)) return("Adjusted gap not estimable for this metro (too few majority-Black origins).")
+  sig <- if (g$p < 0.05) "distinguishable from zero" else "not distinguishable from zero at the 5% level"
+  sprintf("Adjusted gap in this metro: movers from majority-Black origins reached destinations %+.3f µg/m³ %s than comparable movers from majority-white origins (95%% CI %.3f to %.3f; %s; %s majority-Black origin-years). Same model as the national result, estimated within this metro only.",
+          g$est, if (g$est >= 0) "more polluted" else "less polluted", g$lo, g$hi, sig, format(g$n_group, big.mark=","))
+}
+
 # ---------- metro helpers ----------
 metro_insight <- function(cb) {
   s <- D$msank[cbsa==cb]; nm <- D$mlist[cbsa==cb]$name
@@ -172,13 +189,24 @@ base_map <- function(cb) {
   if (!is.null(D$mpc)) { pc <- D$mpc[cbsa==cb]; if (nrow(pc)) m <- m |> addMarkers(data=pc, lng=~lon, lat=~lat, label=~principal_city, labelOptions=labelOptions(noHide=TRUE, direction="top")) }
   m
 }
-dest_map <- function(cb, grp, dom) {
-  d <- D$mdest[cbsa==cb & o_race==grp]; m <- base_map(cb)
-  if (!nrow(d)) return(m)
-  pal <- colorNumeric("viridis", domain=dom, reverse=TRUE)
-  m |> addCircleMarkers(data=d, lng=~lon, lat=~lat, radius=~pmin(1.5 + sqrt(in_moves)/3, 14), stroke=FALSE, fillOpacity=0.7, fillColor=~pal(dest_pm25),
-         popup=~sprintf("<b>Destination block group %s</b><br>Arrivals from %s origins: %s<br>Destination PM2.5 (2019): %.1f µg/m³<br>Mean PM2.5 of those movers' origins: %.1f µg/m³", dest_bg, grp, format(round(in_moves)), dest_pm25, origin_pm25)) |>
-    addLegend("bottomright", pal=pal, values=dom, title="Destination PM2.5<br>2019 (µg/m³)", opacity=0.9)
+# pollution as a shaded background (every block-group centroid, low opacity), destinations as sized hollow circles
+poll_layer <- function(m, cb) {
+  b <- D$mbg[cbsa==cb & !is.na(pm25_2019)]; if (!nrow(b)) return(m)
+  pal <- colorNumeric(c("#ffffd9","#c7e9b4","#41b6c4","#225ea8","#081d58"), domain=b$pm25_2019)
+  m |> addCircleMarkers(data=b, lng=~lon, lat=~lat, radius=5, stroke=FALSE, fillOpacity=0.45, fillColor=~pal(pm25_2019), group="PM2.5 background",
+         popup=~sprintf("<b>Block group %s</b><br>%s<br>PM2.5 2019: %.1f µg/m³<br>NO2 2019: %.1f ppb", geoid_bg, race_majority, pm25_2019, no2_2019)) |>
+    addLegend("bottomleft", pal=pal, values=b$pm25_2019, title="PM2.5, 2019 (µg/m³)<br>shaded background", opacity=0.8)
+}
+dest_layer <- function(m, cb, grp, col) {
+  d <- D$mdest[cbsa==cb & o_race==grp]; if (!nrow(d)) return(m)
+  m |> addCircleMarkers(data=d, lng=~lon, lat=~lat, radius=~pmin(2 + sqrt(in_moves)/2.5, 16), stroke=TRUE, color=col, weight=1.5, fillColor=col, fillOpacity=0.25, group="Destinations",
+         popup=~sprintf("<b>Destination block group %s</b><br>Arrivals from %s origins, 2011–19: %s<br>Destination PM2.5 (2019): %.1f µg/m³<br>Mean PM2.5 of those movers' origins: %.1f µg/m³", dest_bg, grp, format(round(in_moves)), dest_pm25, origin_pm25))
+}
+GRP_OF <- c(black="Majority Black", white="Majority white (NH)", hisp="Majority Hispanic"); COL_OF <- c(black=GRP_COL[["Black"]], white=GRP_COL[["White"]], hisp=GRP_COL[["Hispanic"]])
+dest_map <- function(cb, g, show_dest=TRUE) {
+  m <- base_map(cb) |> poll_layer(cb)
+  if (show_dest) m <- m |> dest_layer(cb, GRP_OF[[g]], COL_OF[[g]]) |> addControl(sprintf("<span style='background:%s;opacity:.6;display:inline-block;width:12px;height:12px;border-radius:6px'></span> circle size = arrivals from %s origins", COL_OF[[g]], tolower(sub(" \\(NH\\)","",GRP_OF[[g]]))), position="topleft")
+  m
 }
 
 # ============================================================ UI
@@ -209,7 +237,7 @@ ui <- page_navbar(
       value_box(title="Black-majority neighbourhoods, PM2.5", value=if (length(h$b11)) sprintf("%.1f → %.1f", h$b11, h$b19) else "—", p("µg/m³, 2011 → 2019"), theme="primary", showcase=bs_icon("arrow-down-right")),
       value_box(title="Relative gap to white-majority", value=if (length(h$r11)) sprintf("%.0f%% → %.0f%%", 100*(h$r11-1), 100*(h$r19-1)) else "—", p("above the white-majority level; did not close"), theme="secondary", showcase=bs_icon("dash-lg")),
       value_box(title="Extra pollution reached by movers from Black-majority origins", value=if (length(h$gap)) sprintf("+%s", fmt(h$gap)) else "—", p("µg/m³ vs. comparable white-majority origins"), theme="danger", showcase=bs_icon("signpost-split")),
-      value_box(title="Clean & affordable neighbourhoods within reach", value=if (length(h$opp_b)) sprintf("%.0f%% vs %.0f%%", 100*h$opp_b, 100*h$opp_w) else "—", p("typical Black-majority vs white-majority origin"), theme="info", showcase=bs_icon("map")))
+      value_box(title="Clean & affordable neighbourhoods within reach", value=if (length(h$opp_b)) sprintf("%.0f%% vs %.0f%%", 100*h$opp_b, 100*h$opp_w) else "—", p("typical Black-majority vs white-majority origin — a price-based heuristic for reach, not a real choice set"), theme="info", showcase=bs_icon("map")))
   ),
 
   nav_panel("1 · Did air get cleaner?",
@@ -240,7 +268,9 @@ ui <- page_navbar(
           p("The raw comparison looks the opposite way: minority neighbourhoods start dirtier, so their movers record larger raw reductions. The gap appears only once starting pollution is held equal."),
           radioButtons("cg_fe", "Compare movers within the same…", c("Metropolitan area (main result)"="cbsa", "County"="county", "Nation (year only)"="none"), inline=TRUE),
           plotlyOutput("cg_plot", height="300px"),
-          unitnote("Unit: origin block-group-years (≈1.9 million), each weighted by its number of out-moves, so these are statements about the average move. Confidence intervals use standard errors clustered on the metropolitan area.")),
+          unitnote("Unit: origin block-group-years (≈1.9 million), each weighted by its number of out-moves, so these are statements about the average move. Confidence intervals use standard errors clustered on the metropolitan area."),
+          card(class="bg-light", card_body(strong("What this contrast is — and is not."), " It compares the destinations reached by ", em("streams of movers leaving different kinds of neighbourhood"), ". It is not an estimate of any household's intention or ability to avoid pollution, of discrimination, or of the options open to a specific family. The study cannot see the race of individual movers; it sees where the out-flow from majority-Black neighbourhoods went compared with the out-flow from otherwise similar majority-white ones.")),
+          if (!is.null(D$sub)) tagList(p(strong("The raw numbers behind it:")), DTOutput("cg_raw"), unitnote("Flow-weighted means over all moves 2011–2019, before adjustment. Minority origins start dirtier and record larger raw reductions; the gap appears once starting pollution is held equal."))),
         tagList(
           p(strong("Does it hold up?"), " Three checks, all giving the same answer:"),
           card(card_header("Different cut-offs for 'majority'"), plotlyOutput("cg_thresh", height="190px")),
@@ -276,7 +306,7 @@ ui <- page_navbar(
         p(class="text-muted small", "Consistent with accounts that emphasise discrimination and steering — and equally with co-ethnic preferences, information networks, and the spatial structure of housing supply in segregated markets. The data cannot separate these."),
         plotlyOutput("af_opp", height="280px"),
         unitnote("'Clean and affordable' = below the metro's median PM2.5 and median home value no more than 3× the origin's median income. A price-based heuristic for reach, not any household's real choice set; results are similar for 2.5×–5× income, rent-based rules and a 'cleanest quartile' definition."))),
-    card(card_header("The signature across eight pollutants"),
+    card(card_header("Three dimensions of environmental mobility inequality, across eight pollutants"),
       layout_sidebar(sidebar=sidebar(width=280, radioButtons("mp_group", "Origin group", c("Black","Hispanic")), checkboxInput("mp_sd", "Standardised units (compare across pollutants)", TRUE),
           p(class="small", strong("Reading the chart:"), " each row is one pollutant, grouped by type; columns are three separate questions. Red points are distinguishable from zero at p < 0.05.")),
         plotlyOutput("mp_plot", height="580px")),
@@ -285,26 +315,34 @@ ui <- page_navbar(
   ),
 
   nav_panel("5 · Explore your city",
+    card(class="bg-light", card_body(h4("What we learned"), p("Cleaner air did not mean equal environmental opportunity. Pollution declined across U.S. neighbourhoods between 2011 and 2019, but the destinations reached through residential mobility remained unequal: movers leaving majority-Black neighbourhoods tended to reach more polluted destinations than those leaving otherwise comparable majority-white neighbourhoods. The disparity was most pronounced for traffic and combustion pollutants and in more segregated metropolitan areas, and destination housing prices alone explained little of it. The explorer below shows how this plays out in the 30 largest metros."))),
     if (!HAS_METRO) card(p("Metro-level maps are forthcoming."))
     else layout_sidebar(
       sidebar = sidebar(width=320,
         selectizeInput("me_cbsa", "Metropolitan area (type to search)", setNames(D$mlist$cbsa, D$mlist$name)),
-        radioButtons("me_mode", "View", c("Side by side: majority-Black vs majority-white origins"="compare", "Single layer"="single")),
-        conditionalPanel("input.me_mode == 'single'",
-          radioButtons("me_layer", "Layer", c("Exposure change of out-movers, by origin block group"="re", "Destinations of movers from majority-Black origins"="dest_black", "Destinations of movers from majority-white origins"="dest_white", "Destinations of movers from majority-Hispanic origins"="dest_hisp", "PM2.5 in 2019"="pm25")),
-          sliderInput("me_min", "Hide origins with fewer out-moves than", 0, 200, 20, 10)),
-        p(class="small text-muted", "Within-metro moves only, pooled 2011–2019. Dots are block-group centroids. Click a dot for its numbers; the layer switcher (top right of a map) turns on street labels.")),
-      card(card_header(textOutput("me_name")), uiOutput("me_insight")),
-      conditionalPanel("input.me_mode == 'compare'",
+        radioButtons("me_grp", "Movers from", c("Black-majority origins"="black", "White-majority origins"="white", "Hispanic-majority origins"="hisp")),
+        accordion(open=FALSE, accordion_panel("Advanced options", icon=bs_icon("sliders"),
+          checkboxInput("me_showdest", "Show destinations on the map", TRUE),
+          checkboxInput("me_compare", "Side-by-side comparison (Black- vs white-majority origins)", FALSE),
+          checkboxInput("me_origins", "Origin view: colour each block group by the exposure change of its out-movers", FALSE),
+          sliderInput("me_min", "Origin view: hide block groups with fewer out-moves than", 0, 200, 20, 10))),
+        p(class="small text-muted", "Within-metro moves only, pooled 2011–2019. Dots are block-group centroids; click one for its numbers. The layer switcher at the top right of a map turns on street labels.")),
+      card(card_header(textOutput("me_name")),
+        layout_columns(col_widths=c(7,5),
+          tagList(plotlyOutput("me_quint", height="330px"),
+            unitnote("Descriptive: share of each group's within-metro moves whose destination falls in each fifth of this metro's block groups ranked by 2019 PM2.5. Not adjusted for starting pollution.")),
+          tagList(uiOutput("me_insight"), card(class="border-danger", card_body(uiOutput("me_gap")))))),
+      conditionalPanel("!input.me_compare",
+        card(full_screen=TRUE, card_header(textOutput("me_maptitle")), leafletOutput("me_map", height="560px"),
+          unitnote("Background shading: PM2.5 in 2019 for every block group (light = cleaner, dark = dirtier). Circles: destination block groups, sized by the number of arrivals from the selected origin group. Reading the map: are the circles sitting on light or dark ground?"))),
+      conditionalPanel("input.me_compare",
         layout_columns(col_widths=c(6,6),
-          card(card_header("Where movers from majority-Black origins went"), leafletOutput("me_mapA", height="480px")),
-          card(card_header("Where movers from majority-white origins went"), leafletOutput("me_mapB", height="480px"))),
-        unitnote("Both maps use the same colour scale (destination PM2.5 in 2019) and the same dot-size scale (arrivals). Compare how much yellow (cleaner) versus purple (dirtier) each group reaches.")),
-      conditionalPanel("input.me_mode == 'single'", card(full_screen=TRUE, leafletOutput("me_map", height="560px"))),
-      layout_columns(col_widths=c(7,5),
-        card(card_header("Where each origin group's movers land on the metro's pollution gradient"), plotlyOutput("me_sankey", height="400px"),
-          unitnote("Destinations ranked into quintiles of 2019 PM2.5 within this metro (Q1 cleanest, Q5 dirtiest). Hover a ribbon for moves and the mean change in PM2.5 those movers experienced.")),
-        card(card_header("This metro in numbers"), DTOutput("me_table"))))
+          card(card_header("Destinations of movers from Black-majority origins"), leafletOutput("me_mapA", height="480px")),
+          card(card_header("Destinations of movers from white-majority origins"), leafletOutput("me_mapB", height="480px"))),
+        unitnote("Same pollution background and the same circle-size scale on both maps.")),
+      card(card_header("Flows from origin group to destination pollution quintile"), plotlyOutput("me_sankey", height="380px"),
+        unitnote("Same data as the bar chart, drawn as flows. Hover a ribbon for moves and the mean change in PM2.5 those movers experienced.")),
+      card(card_header("This metro in numbers"), DTOutput("me_table")))
   ),
 
   nav_panel("6 · Methods & data",
@@ -347,6 +385,7 @@ server <- function(input, output, session) {
   small <- function(d) { ci(d); ggplot(d, aes(est, spec)) + geom_vline(xintercept=0, linetype=2, colour="grey50") + geom_errorbar(aes(xmin=lo, xmax=hi), width=0.2) + geom_point(size=2.5, colour="#B2403A") + labs(x="Black gap (µg/m³)", y=NULL) + theme_app() }
   output$cg_thresh <- renderPlotly({ req(D$thresh); ggplotly(small(D$thresh[, .(spec, est=black_gap, se=black_se)])) |> hleg() })
   output$cg_select <- renderPlotly({ req(D$select); d <- D$select[group=="Black"]; d[, spec := factor(spec, levels=c("all","within_cbsa","short_dist","plus_dist"), labels=c("All moves","Within metro","≤ 50 km","+ distance control"))]; ggplotly(small(d)) |> hleg() })
+  output$cg_raw <- renderDT({ req(D$sub); d <- D$sub[dimension=="o_race_majority", .(`Origin neighbourhood`=subgroup, `Mean origin PM2.5`=round(orig_pm25,2), `Mean change at destination`=round(mean_change,3), `Moves (millions)`=round(flow/1e6,1))]; datatable(d, options=list(dom="t"), rownames=FALSE) })
   output$cg_meerr <- renderPlotly({ req(D$meerr); ggplotly(small(D$meerr[, .(spec, est=Black, se=Black_se)])) |> hleg() })
   output$r1_plot <- renderPlotly({ req(HAS_R1); ggplotly(p_r1()) |> hleg() })
   output$r1_odfe <- renderDT({ req(D$r1_odfe); datatable(D$r1_odfe[group=="Majority Black", .(Specification=spec, `Black gap`=round(est,3), `95% CI`=sprintf("%.3f to %.3f", lo, hi))], options=list(dom="t"), rownames=FALSE) })
@@ -358,27 +397,21 @@ server <- function(input, output, session) {
   # metro explorer
   output$me_name <- renderText({ req(HAS_METRO, input$me_cbsa); D$mlist[cbsa==input$me_cbsa]$name })
   output$me_insight <- renderUI({ req(HAS_METRO, input$me_cbsa); p(metro_insight(input$me_cbsa)) })
-  dom <- reactive({ req(input$me_cbsa); range(D$mdest[cbsa==input$me_cbsa]$dest_pm25, na.rm=TRUE) })
-  output$me_mapA <- renderLeaflet({ req(HAS_METRO, input$me_cbsa); dest_map(input$me_cbsa, "Majority Black", dom()) })
-  output$me_mapB <- renderLeaflet({ req(HAS_METRO, input$me_cbsa); dest_map(input$me_cbsa, "Majority white (NH)", dom()) })
+  output$me_gap <- renderUI({ req(HAS_METRO, input$me_cbsa); t <- metro_gap_text(input$me_cbsa); if (is.null(t)) p(class="text-muted small", "Metro-specific adjusted gaps not yet built (scripts/build_app_metro_gaps.R).") else p(strong("Adjusted comparison. "), t) })
+  output$me_quint <- renderPlotly({ req(HAS_METRO, input$me_cbsa); ggplotly(p_quint(input$me_cbsa), tooltip="text") |> hleg() })
+  output$me_maptitle <- renderText({ req(input$me_cbsa); if (isTRUE(input$me_origins)) "Origin view: average PM2.5 change experienced by households leaving each block group" else sprintf("Where movers from %s went, on this metro's pollution map", c(black="Black-majority origins", white="white-majority origins", hisp="Hispanic-majority origins")[[input$me_grp]]) })
   output$me_map <- renderLeaflet({
-    req(HAS_METRO, input$me_cbsa, input$me_mode=="single")
-    if (input$me_layer %in% c("dest_black","dest_white","dest_hisp"))
-      return(dest_map(input$me_cbsa, c(dest_black="Majority Black", dest_white="Majority white (NH)", dest_hisp="Majority Hispanic")[[input$me_layer]], dom()))
-    b <- D$mbg[cbsa==input$me_cbsa & out_moves >= input$me_min]; req(nrow(b) > 0); m <- base_map(input$me_cbsa)
-    if (input$me_layer == "re") {
-      lim <- quantile(abs(b$re_pm25), 0.95, na.rm=TRUE); b[, v := pmax(pmin(re_pm25, lim), -lim)]
-      pal <- colorNumeric(c("#2166AC","#F7F7F7","#B2182B"), domain=c(-lim, lim))
-      m |> addCircleMarkers(data=b, lng=~lon, lat=~lat, radius=~pmin(2 + sqrt(out_moves)/6, 9), stroke=FALSE, fillOpacity=0.75, fillColor=~pal(v),
-             popup=~sprintf("<b>Block group %s</b><br>%s<br>Out-moves 2011–19: %s<br>Mean PM2.5 change of out-movers: %+.2f µg/m³<br>PM2.5 2019: %.1f µg/m³", geoid_bg, race_majority, format(round(out_moves)), re_pm25, pm25_2019)) |>
-        addLegend("bottomright", pal=pal, values=c(-lim, lim), title="Δ PM2.5 of out-movers<br>(blue = reached cleaner air)", opacity=0.9)
-    } else {
-      pal <- colorNumeric("viridis", domain=b$pm25_2019, reverse=TRUE)
-      m |> addCircleMarkers(data=b, lng=~lon, lat=~lat, radius=4, stroke=FALSE, fillOpacity=0.75, fillColor=~pal(pm25_2019),
-             popup=~sprintf("<b>Block group %s</b><br>%s<br>PM2.5 2019: %.1f µg/m³<br>NO2 2019: %.1f ppb", geoid_bg, race_majority, pm25_2019, no2_2019)) |>
-        addLegend("bottomright", pal=pal, values=b$pm25_2019, title="PM2.5 2019 (µg/m³)", opacity=0.9)
-    }
+    req(HAS_METRO, input$me_cbsa)
+    if (!isTRUE(input$me_origins)) return(dest_map(input$me_cbsa, input$me_grp, isTRUE(input$me_showdest)))
+    b <- D$mbg[cbsa==input$me_cbsa & out_moves >= input$me_min]; req(nrow(b) > 0)
+    lim <- quantile(abs(b$re_pm25), 0.95, na.rm=TRUE); b[, v := pmax(pmin(re_pm25, lim), -lim)]
+    pal <- colorNumeric(c("#2166AC","#F7F7F7","#B2182B"), domain=c(-lim, lim))
+    base_map(input$me_cbsa) |> addCircleMarkers(data=b, lng=~lon, lat=~lat, radius=~pmin(2 + sqrt(out_moves)/6, 9), stroke=FALSE, fillOpacity=0.75, fillColor=~pal(v),
+        popup=~sprintf("<b>Block group %s</b><br>%s<br>Out-moves 2011–19: %s<br>Mean PM2.5 change of out-movers: %+.2f µg/m³<br>PM2.5 2019: %.1f µg/m³", geoid_bg, race_majority, format(round(out_moves)), re_pm25, pm25_2019)) |>
+      addLegend("bottomright", pal=pal, values=c(-lim, lim), title="Δ PM2.5 of out-movers<br>(blue = reached cleaner air)", opacity=0.9)
   })
+  output$me_mapA <- renderLeaflet({ req(HAS_METRO, input$me_cbsa, isTRUE(input$me_compare)); dest_map(input$me_cbsa, "black") })
+  output$me_mapB <- renderLeaflet({ req(HAS_METRO, input$me_cbsa, isTRUE(input$me_compare)); dest_map(input$me_cbsa, "white") })
   output$me_sankey <- renderPlotly({
     req(HAS_METRO, input$me_cbsa); s <- D$msank[cbsa==input$me_cbsa & o_race %in% c("Majority white (NH)","Majority Black","Majority Hispanic","No majority")]; req(nrow(s) > 0)
     og <- c("Majority white (NH)","Majority Black","Majority Hispanic","No majority"); dq <- paste0("Q", 1:5)

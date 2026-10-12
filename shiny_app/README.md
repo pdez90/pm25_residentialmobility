@@ -18,6 +18,8 @@ shiny::runApp("shiny_app")
 ```bash
 bash shiny_app/refresh_data.sh              # copies every output CSV under 50 KB into shiny_app/data/
 Rscript scripts/build_app_metro_data.R      # metro explorer: map + Sankey tables for the 30 largest metros (~20 min)
+Rscript scripts/build_app_metro_pc.R        # principal-city markers (1 min)
+Rscript scripts/build_app_metro_gaps.R      # metro-specific adjusted gaps (2-3 min)
 ```
 
 ## Publish to Posit Connect Cloud (free tier is enough)
