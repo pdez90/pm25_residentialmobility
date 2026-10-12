@@ -21,7 +21,19 @@ Rscript scripts/build_app_metro_data.R      # metro explorer: map + Sankey table
 Rscript scripts/build_app_metro_pc.R        # principal-city markers (1 min)
 Rscript scripts/build_app_metro_gaps.R      # metro-specific adjusted gaps (2-3 min)
 Rscript scripts/build_od_parquet.R          # national origin-destination Parquet for 'Trace a neighbourhood' (~40 min)
+OD_ATTR_ONLY=1 Rscript scripts/build_od_parquet.R   # only rebuild data/bg_attr.parquet (income, home value, rent; ~2 min)
 ```
+
+`build_app_metro_data.R` also writes `metro_transition.csv` (origin PM2.5 quintile x
+destination quintile, by origin group and year), which drives the transition matrix on
+the metro page; the tab falls back to the Sankey only when that file is absent.
+
+## Shareable links
+
+The query string mirrors the current view (tab, metro, year, origin block group,
+affordability rule, highlights), e.g.
+`?tab=trace&origin=360850323001&year=2019&rule=4` or `?tab=metro&metro=35620&grp=black&year=2015&view=matrix`,
+and each explorer sidebar has a "Link to this view" box.
 
 ## Publish to Posit Connect Cloud (free tier is enough)
 

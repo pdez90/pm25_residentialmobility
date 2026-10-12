@@ -18,8 +18,11 @@ if (!exists(".migrate_paths_loaded")) source(
 #   metro_dest.csv      cbsa x destination BG x origin group: moves arriving
 #                       and the mean PM2.5 those movers left behind
 #   metro_sankey.csv    cbsa x origin group x destination PM2.5 quintile
-#                       (quintiles within metro-year, Q5 = dirtiest): moves,
+#                       (quintiles of the metro's block groups in that year,
+#                       equal weight per block group, Q5 = dirtiest): moves,
 #                       mean reallocation
+#   metro_transition.csv cbsa x year ('all' pooled) x origin group x origin
+#                       quintile x destination quintile: moves, mean reallocation
 #
 # Sizes: ~30 metros x ~3-6k block groups -> metro_bg ~100-150k rows (~10 MB),
 # metro_dest ~4x that but only for destinations with >= 5 moves (~15 MB).
@@ -60,7 +63,7 @@ cb <- tryCatch(tigris::core_based_statistical_areas(cb=TRUE, year=2019), error=f
 cbn <- if (!is.null(cb)) data.table(cbsa=cb$CBSAFP, name=cb$NAME, lsad=cb$LSAD) else data.table(cbsa=character(), name=character(), lsad=character())
 
 # ---- MIGRATE pass: within-metro flows only ----
-acc_o <- list(); acc_d <- list(); acc_s <- list(); acc_m <- list()
+acc_o <- list(); acc_d <- list(); acc_s <- list(); acc_m <- list(); acc_t <- list()
 for (yr in migrate_years) {
   cat("  MIGRATE", yr, "...\n")
   x <- fread(file.path(mig_dir, paste0(yr,".csv")), select=c("Origin","Destination","Flow"))
@@ -70,10 +73,15 @@ for (yr in migrate_years) {
   x <- att[, .(year, dest_bg=geoid_bg, d_cbsa=cbsa, d_pm25=pm25)][x, on=.(year, dest_bg), nomatch=NULL]
   x <- x[o_cbsa==d_cbsa & !is.na(o_pm25) & !is.na(d_pm25)]
   x[, re := d_pm25 - o_pm25]
-  # destination quintile within metro-year (over destination BGs reached, flow-weighted)
-  x[, d_q := { q <- quantile(d_pm25, probs=seq(0,1,0.2), na.rm=TRUE); as.integer(cut(d_pm25, unique(q), include.lowest=TRUE, labels=FALSE)) }, by=.(o_cbsa)]
-  x[, d_q := pmin(pmax(d_q, 1L), 5L)]
+  # PM2.5 quintiles of the metro's BLOCK GROUPS in this year (equal weight per block group, Q5 = dirtiest),
+  # applied to both origin and destination so the two sides of the transition matrix share one scale
+  qb <- att[year==yr & !is.na(pm25), .(br=list(unique(quantile(pm25, probs=seq(0,1,0.2))))), by=cbsa]
+  x <- qb[x, on=.(cbsa=o_cbsa)]; setnames(x, "cbsa", "o_cbsa"); x <- x[lengths(br) > 0]
+  x[, `:=`(d_q = pmin(pmax(as.integer(cut(d_pm25, br[[1]], include.lowest=TRUE, labels=FALSE)), 1L), 5L),
+           o_q = pmin(pmax(as.integer(cut(o_pm25, br[[1]], include.lowest=TRUE, labels=FALSE)), 1L), 5L)), by=o_cbsa]
+  x[, br := NULL]
   acc_m[[as.character(yr)]] <- x[, .(moves=sum(flow)), by=.(cbsa=o_cbsa)]
+  acc_t[[as.character(yr)]] <- x[, .(year=yr, moves=sum(flow), re_sum=sum(flow*re)), by=.(cbsa=o_cbsa, o_race, orig_q=paste0("Q", o_q), dest_q=paste0("Q", d_q))]
   acc_o[[as.character(yr)]] <- x[, .(out_moves=sum(flow), re_sum=sum(flow*re)), by=.(cbsa=o_cbsa, geoid_bg=origin_bg)]
   acc_d[[as.character(yr)]] <- x[, .(in_moves=sum(flow), opm_sum=sum(flow*o_pm25)), by=.(cbsa=d_cbsa, dest_bg, o_race)]
   acc_s[[as.character(yr)]] <- x[, .(year=yr, moves=sum(flow), re_sum=sum(flow*re), dpm_sum=sum(flow*d_pm25), opm_sum=sum(flow*o_pm25)), by=.(cbsa=o_cbsa, o_race, dest_q=paste0("Q", d_q))]
@@ -105,6 +113,11 @@ fwrite(sy[, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3)
 my <- sy[, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3), dest_pm25=round(sum(dpm_sum)/sum(moves),2), orig_pm25=round(sum(opm_sum)/sum(moves),2),
              share_dirtiest2=round(sum(moves[dest_q %in% c("Q4","Q5")])/sum(moves),3), share_cleanest2=round(sum(moves[dest_q %in% c("Q1","Q2")])/sum(moves),3)), by=.(cbsa, year, o_race)]
 fwrite(my[order(cbsa, year, o_race)], file.path(app_dir,"metro_year.csv"))
+# origin-quintile x destination-quintile transition matrix, by origin group and year (plus an all-years pool)
+tr <- rbindlist(acc_t)[cbsa %in% top$cbsa]
+tr_all <- tr[, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3)), by=.(cbsa, o_race, orig_q, dest_q)]; tr_all[, year := "all"]
+tr <- rbind(tr[, .(moves=round(sum(moves),1), re_pm25=round(sum(re_sum)/sum(moves),3)), by=.(cbsa, year=as.character(year), o_race, orig_q, dest_q)], tr_all, use.names=TRUE)
+fwrite(tr[order(cbsa, year, o_race, orig_q, dest_q)], file.path(app_dir,"metro_transition.csv"))
 
 ml <- merge(top, cbn[, .(cbsa, name)], by="cbsa", all.x=TRUE)
 ml <- merge(ml, mbg[, .(lon=mean(lon), lat=mean(lat), n_bg=.N), by=cbsa], by="cbsa")
@@ -120,4 +133,4 @@ if (file.exists(pcf)) {
     fwrite(pcs[, .(cbsa, principal_city, lon, lat)], file.path(app_dir,"metro_principal_city.csv")) }
 }
 cat(sprintf("\nDONE. metro_bg %d rows, metro_dest %d rows, metro_sankey %d rows -> %s\n", nrow(mbg), nrow(d), nrow(s), app_dir))
-for (f in c("metro_bg.csv","metro_dest.csv","metro_sankey.csv","metro_sankey_year.csv","metro_year.csv","metro_list.csv")) cat(sprintf("  %-18s %6.1f MB\n", f, file.size(file.path(app_dir,f))/1e6))
+for (f in c("metro_bg.csv","metro_dest.csv","metro_sankey.csv","metro_sankey_year.csv","metro_year.csv","metro_transition.csv","metro_list.csv")) cat(sprintf("  %-18s %6.1f MB\n", f, file.size(file.path(app_dir,f))/1e6))

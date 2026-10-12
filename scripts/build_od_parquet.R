@@ -39,12 +39,12 @@ rc <- rbindlist(lapply(rcs, function(f){ y<-as.integer(str_extract(basename(f),"
 rc[, geoid_bg := pad_bg(geoid_bg)]
 rc[, maj := fifelse(sh_black>0.5,"B", fifelse(sh_hisp>0.5,"H", fifelse(sh_white>0.5,"W","N")))]
 att <- merge(poll, rc[year %in% 2011:2019, .(geoid_bg, year, maj)], by=c("geoid_bg","year"), all.x=TRUE)
-# income and home value (for the 'reachable set': home value <= 3 x origin income, as in the paper)
+# income, home value and gross rent (for the price-screened set: home value <= k x origin income, or rent <= 30% of income)
 acs <- fread(file.path(base_dir,"acs_gentrification","blockgroup_gentrification_2009_2019_lag3_with_HMDA.csv"), colClasses=c(geoid_bg="character"),
-             select=c("year","geoid_bg","med_hh_income","med_home_value"))
+             select=c("year","geoid_bg","med_hh_income","med_home_value","med_gross_rent"))
 acs[, geoid_bg := pad_bg(geoid_bg)]; acs <- unique(acs[year %in% 2011:2019], by=c("geoid_bg","year"))
-att <- merge(att, acs[, .(geoid_bg, year, inc=round(med_hh_income), hv=round(med_home_value))], by=c("geoid_bg","year"), all.x=TRUE)
-wide <- dcast(att, geoid_bg ~ year, value.var=c("pm25","maj","inc","hv"))
+att <- merge(att, acs[, .(geoid_bg, year, inc=round(med_hh_income), hv=round(med_home_value), rent=round(med_gross_rent))], by=c("geoid_bg","year"), all.x=TRUE)
+wide <- dcast(att, geoid_bg ~ year, value.var=c("pm25","maj","inc","hv","rent"))
 cxw <- fread(file.path(base_dir,"pollution_bg","county_cbsa_xwalk.csv"), colClasses=c(county="character",cbsa="character"))
 bg_cache <- file.path(base_dir,"pollution_bg","cache_multi","bg_national.rds"); if (!file.exists(bg_cache)) bg_cache <- file.path(base_dir,"pollution_bg","cache","bg_national.rds")
 bg <- st_transform(readRDS(bg_cache), 4326); cc <- st_coordinates(st_centroid(bg))
@@ -54,6 +54,7 @@ attr_ <- merge(cent[, .(geoid_bg, lon, lat, cbsa)], wide, by="geoid_bg", all.x=T
 for (y in 2011:2019) set(attr_, j=paste0("pm25_",y), value=round(attr_[[paste0("pm25_",y)]], 2))
 write_parquet(attr_, file.path(app_dir, "bg_attr.parquet"), compression="zstd")
 cat(sprintf("bg_attr.parquet: %d block groups, %.1f MB\n", nrow(attr_), file.size(file.path(app_dir,"bg_attr.parquet"))/1e6))
+if (Sys.getenv("OD_ATTR_ONLY", "0") == "1") { cat("OD_ATTR_ONLY=1: attributes rebuilt, skipping the OD flow files.\n"); quit(save="no") }
 
 # ---- OD flows, one file per year, sorted by origin ----
 for (yr in 2011:2019) {

@@ -26,13 +26,14 @@ D <- list(
   segmp = rd("multipollutant_segregation.csv"), sub = rd("avoidance_by_subgroup.csv"),
   r1_band = rd("r1_gap_by_distance_band.csv"), r1_dest = rd("r1_black_gap_by_dest_type.csv"),
   r1_odfe = rd("r1_gap_od_type_fe.csv"), r1_mat = rd("r1_od_type_matrix.csv"), r1_dist = rd("r1_distance_distribution_by_group.csv"),
-  mlist = rd("metro_list.csv"), mbg = rd("metro_bg.csv"), mdest = rd("metro_dest.csv"), msank = rd("metro_sankey.csv"), mpc = rd("metro_principal_city.csv"), mgap = rd("metro_gap.csv"), msy = rd("metro_sankey_year.csv"), myr = rd("metro_year.csv")
+  mlist = rd("metro_list.csv"), mbg = rd("metro_bg.csv"), mdest = rd("metro_dest.csv"), msank = rd("metro_sankey.csv"), mpc = rd("metro_principal_city.csv"), mgap = rd("metro_gap.csv"), msy = rd("metro_sankey_year.csv"), myr = rd("metro_year.csv"), mtr = rd("metro_transition.csv")
 )
-for (k in c("mlist","mbg","mdest","msank","mpc","mgap","msy","myr")) if (!is.null(D[[k]])) D[[k]][, cbsa := as.character(cbsa)]
+for (k in c("mlist","mbg","mdest","msank","mpc","mgap","msy","myr","mtr")) if (!is.null(D[[k]])) D[[k]][, cbsa := as.character(cbsa)]
 if (!is.null(D$mbg)) D$mbg[, geoid_bg := as.character(geoid_bg)]
 HAS_METRO <- !is.null(D$mbg) && !is.null(D$mlist) && !is.null(D$msank)
 HAS_R1    <- !is.null(D$r1_band) && !is.null(D$r1_dest)
 HAS_YEAR  <- !is.null(D$msy) && !is.null(D$myr)
+HAS_TRANS <- !is.null(D$mtr); if (HAS_TRANS) D$mtr[, year := as.character(year)]
 # ---- national origin-destination tracing (optional; needs hosted Parquet + duckdb) ----
 OD_BASE <- Sys.getenv("OD_PARQUET_BASE", "")
 HAS_OD  <- nzchar(OD_BASE) && file.exists("data/bg_attr.parquet") && requireNamespace("duckdb", quietly=TRUE) && requireNamespace("arrow", quietly=TRUE)
@@ -41,6 +42,13 @@ if (HAS_OD) {
   od_con <- tryCatch({ con <- DBI::dbConnect(duckdb::duckdb()); DBI::dbExecute(con, "INSTALL httpfs; LOAD httpfs;"); con }, error=function(e) NULL)
   if (is.null(od_con)) HAS_OD <- FALSE
 }
+HAS_RENT <- HAS_OD && any(grepl("^rent_", names(BGA)))
+# affordability screens for the 'price-screened potential destinations' (3x income is the paper's baseline; Table S17 reports the others)
+RULES <- c("Home value ≤ 3× origin income (paper baseline)"="3", "Home value ≤ 4× origin income"="4", "Home value ≤ 5× origin income"="5", "Gross rent ≤ 30% of origin income"="rent")
+RULE_LAB <- c(`3`="home value ≤ 3× the origin's median income (paper baseline)", `4`="home value ≤ 4× the origin's median income", `5`="home value ≤ 5× the origin's median income", rent="median gross rent ≤ 30% of the origin's median income")
+SMALL_SET <- 0.05   # warn when fewer than 5% of the metro's block groups pass the screen
+QLAB <- c("Q1 cleanest","Q2","Q3","Q4","Q5 dirtiest")
+quint_of <- function(x, br) pmin(pmax(as.integer(cut(x, br, include.lowest=TRUE, labels=FALSE)), 1L), 5L)
 od_query <- function(origin, year) {
   q <- sprintf("SELECT Destination AS dest_bg, Flow AS flow FROM read_parquet('%s/od_%d.parquet') WHERE Origin = '%s'", OD_BASE, year, origin)
   as.data.table(DBI::dbGetQuery(od_con, q))
@@ -186,6 +194,18 @@ p_quint <- function(cb, yr="all") {
     scale_fill_manual(values=c(`Black-majority origins`=GRP_COL[["Black"]], `Hispanic-majority origins`=GRP_COL[["Hispanic"]], `White-majority origins`=GRP_COL[["White"]])) +
     labs(x="Destination block group's PM2.5 quintile within this metro (2019)", y="% of the group's within-metro moves", fill=NULL) + theme_app()
 }
+p_transition <- function(cb, yr="all") {
+  t <- D$mtr[cbsa==cb & year==yr & o_race %in% c("Majority Black","Majority white (NH)","Majority Hispanic")]
+  grid <- CJ(o_race=unique(t$o_race), orig_q=paste0("Q",1:5), dest_q=paste0("Q",1:5))
+  t <- merge(grid, t, by=c("o_race","orig_q","dest_q"), all.x=TRUE); t[is.na(moves), moves := 0]
+  t[, share := if (sum(moves) > 0) moves/sum(moves) else 0, by=.(o_race, orig_q)]
+  t[, o_race := factor(o_race, levels=c("Majority Black","Majority Hispanic","Majority white (NH)"), labels=c("Black-majority origins","Hispanic-majority origins","White-majority origins"))]
+  t[, `:=`(orig_q=factor(orig_q, levels=rev(paste0("Q",1:5)), labels=rev(QLAB)), dest_q=factor(dest_q, levels=paste0("Q",1:5), labels=QLAB))]
+  ggplot(t, aes(dest_q, orig_q, fill=100*share, text=sprintf("%s<br>origin %s → destination %s<br>%.0f%% of moves from this origin quintile<br>%s estimated movers; mean Δ PM2.5 %+.2f µg/m³", o_race, orig_q, dest_q, 100*share, format(round(moves), big.mark=","), re_pm25))) +
+    geom_tile(colour="white") + geom_text(aes(label=ifelse(moves > 0, sprintf("%.0f%%", 100*share), "")), size=3.3, colour="black") +
+    facet_wrap(~o_race) + scale_fill_gradient(low="#f7fbff", high="#B2403A", name="% of row") +
+    labs(x="Destination PM2.5 quintile (metro's block groups, that year)", y="Origin PM2.5 quintile") + theme_app() + theme(axis.text.x=element_text(angle=25, hjust=1), legend.position="none")
+}
 metro_gap_text <- function(cb) {
   if (is.null(D$mgap)) return(NULL); g <- D$mgap[cbsa==cb & group=="Majority Black"]; if (!nrow(g)) return("Adjusted gap not estimable for this metro (too few majority-Black origins).")
   sig <- if (g$p < 0.05) "distinguishable from zero" else "not distinguishable from zero at the 5% level"
@@ -251,13 +271,13 @@ ui <- page_navbar(
       card(class="border-0",
         h2("Air got cleaner. But moving didn't give everyone the same chance to escape pollution."),
         p(class="lead", "Between 2011 and 2019, air pollution fell across American neighbourhoods. Yet among neighbourhoods that started equally polluted, households moving out of majority-Black neighbourhoods tended to reach more polluted destinations than households moving out of majority-white ones."),
-        p("This site walks through the evidence from a study of ", strong("every block-group-to-block-group move in the United States over nine years"), ", linked to maps of eight air pollutants. It is organised as six questions. Each page gives the answer in plain terms first and keeps the statistics behind ", em("How was this estimated?"), " panels."),
+        p("This site walks through the evidence from a study of ", strong("estimated migration flows between every pair of Census block groups in the United States over nine years"), ", linked to maps of eight air pollutants. It is organised as six questions. Each page gives the answer in plain terms first and keeps the statistics behind ", em("How was this estimated?"), " panels."),
         tags$ol(class="fs-5",
           tags$li(actionLink("go1", "Did air get cleaner?"), " — yes, for everyone; the absolute gap narrowed, the relative gap did not."),
           tags$li(actionLink("go2", "Did moving help?"), " — the decline came from cleanup in place, not from people moving."),
-          tags$li(actionLink("go3", "Who reached cleaner air?"), " — from the same starting point, movers from minority neighbourhoods captured less."),
-          tags$li(actionLink("go4", "Why might this happen?"), " — not destination prices; it tracks segregation and traffic pollution."),
-          tags$li(actionLink("go5", "Explore your city"), " — maps and flows for the 30 largest metros."),
+          tags$li(actionLink("go3", "Who reached cleaner air?"), " — comparing origins with similar pollution and socioeconomic characteristics, flows out of minority neighbourhoods reached less of it."),
+          tags$li(actionLink("go4", "Why might this happen?"), " — destination median prices alone explain little; the pattern tracks segregation and traffic pollution."),
+          tags$li(actionLink("go5", "Explore your city"), " — maps, transition matrices and flows for the 30 largest metros; trace any block group."),
           tags$li(actionLink("go6", "Methods & data"), " — how it was estimated, glossary, downloads.")),
         p(class="text-muted", "These are observational associations between neighbourhood types and the destinations their movers reached. The study documents the disparity and characterises it; it does not identify the mechanism that produces it, and it cannot see the race of any individual mover.")),
       card(card_header("The central comparison, in one picture"), plotlyOutput("schematic", height="430px"),
@@ -290,10 +310,10 @@ ui <- page_navbar(
   ),
 
   nav_panel("3 · Who reached cleaner air?",
-    card(card_header("From the same starting point, movers from minority neighbourhoods captured less of it."),
+    card(card_header("Comparing origins with similar pollution and socioeconomic characteristics, movers from minority neighbourhoods reached less of it."),
       layout_columns(col_widths=c(6,6),
         tagList(
-          p(if (length(h$gap)) sprintf("Compare streams of movers leaving neighbourhoods with the same pollution, income, poverty and education, in the same metropolitan area and year. Movers from majority-Black neighbourhoods ended up at destinations %s µg/m³ more polluted (95%% CI %s to %s) than movers from majority-white neighbourhoods. That is small against total exposure (about 1.5%%), but it is more than double the average exposure improvement that moving delivers at all, and about one-seventh of the entire Black–white gap in 2019.", fmt(h$gap), fmt(h$gap_lo), fmt(h$gap_hi)) else ""),
+          p(if (length(h$gap)) sprintf("Compare estimated flows of movers leaving neighbourhoods with similar pollution, income, poverty and education, in the same metropolitan area and year. Movers from majority-Black neighbourhoods ended up at destinations %s µg/m³ more polluted (95%% CI %s to %s) than movers from majority-white neighbourhoods. That is small against total exposure (about 1.5%%), but it is more than double the average exposure improvement that moving delivers at all, and about one-seventh of the entire Black–white gap in 2019.", fmt(h$gap), fmt(h$gap_lo), fmt(h$gap_hi)) else ""),
           p("The raw comparison looks the opposite way: minority neighbourhoods start dirtier, so their movers record larger raw reductions. The gap appears only once starting pollution is held equal."),
           radioButtons("cg_fe", "Compare movers within the same…", c("Metropolitan area (main result)"="cbsa", "County"="county", "Nation (year only)"="none"), inline=TRUE),
           plotlyOutput("cg_plot", height="300px"),
@@ -313,28 +333,28 @@ ui <- page_navbar(
         tagList(plotlyOutput("r1_plot", height="380px"),
           unitnote("Unit: origin block-group-years split by the type of destination reached (left) or by distance moved (right); separate models in each subset, same controls as above.")),
         tagList(
-          p("Moves out of the urban core deliver the largest exposure gains for every group — but movers from majority-Black core neighbourhoods make those moves less often (66% of their within-metro moves stay in the core, versus 52% for majority-white). Comparing only movers making the same ", em("kind"), " of move (origin type × destination type) cuts the gap from 0.119 to 0.069 µg/m³: roughly 40% of the disparity is lower decentralisation; the rest is reaching more polluted suburbs when they do decentralise."),
-          p("Movers from majority-Black neighbourhoods also move shorter distances (median 8 km vs 15 km). The gap is present for local moves under 10 km, where a new job is least likely to be the reason, and largest for moves over 200 km, which mostly cross metropolitan boundaries."),
+          p("Moves out of the urban core deliver the largest exposure gains for every group — but movers from majority-Black core neighbourhoods make those moves less often (66% of their within-metro moves stay in the core, versus 52% for majority-white). Comparing only movers making the same ", em("kind"), " of move (origin type × destination type) cuts the gap from 0.119 to 0.069 µg/m³: roughly 40% of the disparity is associated with lower decentralisation, and a remaining disparity persists within comparable origin–destination types."),
+          p("Movers from majority-Black neighbourhoods also move shorter distances (median 8 km vs 15 km). The gap is present for local moves under 10 km and largest for moves over 200 km, which mostly cross metropolitan boundaries. The data do not reveal why any household moved."),
           DTOutput("r1_odfe"))),
       how("How was this estimated?", p("Block groups are classified as urban core (inside the metro's principal city), inner suburb (same county as the principal city or within 15 km of its centre), periphery (rest of the metro), micropolitan or non-metropolitan. The main model is re-estimated with destination-type and origin×destination-type fixed effects, and separately within distance bands using great-circle distance between block-group centroids. Source tables: ", code("r1_*.csv"), "; script ", code("scripts/reviewer1_urban_form_distance.R"), ".")))
     else NULL
   ),
 
   nav_panel("4 · Why might this happen?",
-    card(card_header("Not destination prices. The pattern tracks traffic pollution and metropolitan segregation."),
-      p("The study cannot see why any household moved. What it can do is rule out one simple story and show which patterns are consistent with others.")),
+    card(card_header("Destination median prices alone explain little of the gap. The pattern tracks traffic pollution and metropolitan segregation."),
+      p("The study cannot see why any household moved. What it can do is test one simple account — that movers from Black-majority origins reach dirtier air because the places they can afford are dirtier — and show which patterns are consistent with other accounts.")),
     layout_columns(col_widths=c(6,6),
       card(card_header("Differences in destination home values and rents explain very little of the gap"),
         plotlyOutput("af_gelbach", height="300px"),
         p(if (length(h$gelbach)) sprintf("Adding the median home value and rent of the destinations reached accounts for %.2f%% of the Black gap. At the same destination price, movers from Black-majority origins still reached dirtier air.", h$gelbach) else ""),
-        card(class="bg-light", card_body(strong("What this does not say."), " It does not rule out housing-market mechanisms. Discrimination and steering, rental availability, access to credit, search and information constraints, and differences within neighbourhoods can all shape where households end up without showing in median prices. It rules out ", em("destination price levels, as measured by Census medians"), " as a sufficient explanation — nothing broader.")),
+        card(class="bg-light", card_body(strong("What this does not say."), " It does not rule out housing-market mechanisms. Discrimination and steering, rental availability, access to credit, search and information constraints, and differences within neighbourhoods can all shape where households end up without showing in median prices. It provides little support for ", em("destination price levels, as measured by Census medians"), " being a sufficient explanation — and says nothing broader.")),
         how("How was this estimated?", p("A Gelbach decomposition on the common sample of origin-years where both destination home value and rent are observed (home value is missing for 4.3% of block groups and rent for 15.8%, disproportionately rental neighbourhoods, so part of the rental market is not covered). The change in the group coefficient when the two housing variables are added is apportioned exactly between them. Descriptive, not causal mediation: destination price is chosen after the move. Source table: ", code("gelbach_decomposition.csv"), "."))),
       card(card_header("The gap grows with metropolitan segregation"),
         plotlyOutput("af_seg", height="300px"),
         p(if (length(h$seg_lo)) sprintf("In the least segregated quarter of metros the Black gap is %.3f µg/m³; in the most segregated it is %.3f.", h$seg_lo, h$seg_hi) else ""),
         p(class="text-muted small", "Consistent with accounts that emphasise discrimination and steering — and equally with co-ethnic preferences, information networks, and the spatial structure of housing supply in segregated markets. The data cannot separate these."),
         plotlyOutput("af_opp", height="280px"),
-        unitnote("'Clean and affordable' = below the metro's median PM2.5 and median home value no more than 3× the origin's median income. A price-based heuristic for reach, not any household's real choice set; results are similar for 2.5×–5× income, rent-based rules and a 'cleanest quartile' definition."))),
+        unitnote("'Clean and affordable' = below the metro's median PM2.5 and median home value no more than 3× the origin's median income, each block group counted once. A price-screened set of potential destinations, not any household's actual choices; results are similar for 2.5×–5× income, rent-based rules and a 'cleanest quartile' definition (Table S17; the 'Trace a neighbourhood' tab lets you switch rules)."))),
     card(card_header("Three dimensions of environmental mobility inequality, across eight pollutants"),
       layout_sidebar(sidebar=sidebar(width=280, radioButtons("mp_group", "Origin group", c("Black","Hispanic")), checkboxInput("mp_sd", "Standardised units (compare across pollutants)", TRUE),
           p(class="small", strong("Reading the chart:"), " each row is one pollutant, grouped by type; columns are three separate questions. Red points are distinguishable from zero at p < 0.05.")),
@@ -350,17 +370,19 @@ ui <- page_navbar(
       sidebar = sidebar(width=320,
         selectizeInput("me_cbsa", "Metropolitan area (type to search)", setNames(D$mlist$cbsa, D$mlist$name)),
         radioButtons("me_grp", "Movers from", c("Black-majority origins"="black", "White-majority origins"="white", "Hispanic-majority origins"="hisp")),
-        if (HAS_YEAR) selectInput("me_year", "Year (charts and Sankey)", c("All years 2011–2019"="all", as.character(2011:2019))) else NULL,
+        if (HAS_YEAR) selectInput("me_year", "Year — applies to the bar chart, transition matrix and Sankey", c("All years 2011–2019"="all", as.character(2011:2019))) else NULL,
+        if (HAS_TRANS) radioButtons("me_flowview", "Flow view", c("Quintile transition matrix"="matrix", "Sankey (origin group → destination quintile)"="sankey")) else NULL,
         checkboxGroupInput("me_hl", "Highlight neighbourhoods on the map", c("Majority-Black"="B", "Majority-white"="W", "Majority-Hispanic"="H")),
         accordion(open=FALSE, accordion_panel("Advanced options", icon=bs_icon("sliders"),
           checkboxInput("me_showdest", "Show destinations on the map", TRUE),
           checkboxInput("me_compare", "Side-by-side comparison (Black- vs white-majority origins)", FALSE),
           checkboxInput("me_origins", "Origin view: colour each block group by the exposure change of its out-movers", FALSE),
           sliderInput("me_min", "Origin view: hide block groups with fewer out-moves than", 0, 200, 20, 10))),
-        p(class="small text-muted", "Within-metro moves only, pooled 2011–2019. Dots are block-group centroids; click one for its numbers. The layer switcher at the top right of a map turns on street labels.")),
+        p(class="small text-muted", strong("Which controls affect what: "), "the maps always pool all within-metro moves 2011–2019 and shade PM2.5 in 2019 — the year selector does not change them. The bar chart, transition matrix, Sankey and 'What stands out' text follow the year selector. 'Movers from' drives the map and the map title; the charts show all three origin groups. Dots are block-group centroids; click one for its numbers. The layer switcher at the top right of a map turns on street labels."),
+        uiOutput("me_share")),
       card(card_header(textOutput("me_name")),
         plotlyOutput("me_quint", height="330px"),
-        unitnote("Descriptive: share of each group's within-metro moves whose destination falls in each fifth of this metro's block groups ranked by 2019 PM2.5. Not adjusted for starting pollution.")),
+        unitnote("Descriptive: share of each group's within-metro moves whose destination falls in each fifth of this metro's block groups ranked by PM2.5 in the selected year (all years: each year's own quintiles). Not adjusted for starting pollution; follows the year selector.")),
       layout_columns(col_widths=c(6,6),
         card(card_header("What stands out here"), uiOutput("me_insight")),
         card(class="border-danger", card_header("Adjusted comparison, this metro only"), uiOutput("me_gap"))),
@@ -368,15 +390,19 @@ ui <- page_navbar(
         unitnote("Each year's within-metro moves. Left: share of each group's moves ending in the metro's two most polluted quintiles. Right: average PM2.5 change experienced by movers (negative = reached cleaner air). Raw, not adjusted.")) else NULL,
       conditionalPanel("!input.me_compare",
         card(full_screen=TRUE, card_header(textOutput("me_maptitle")), leafletOutput("me_map", height="560px"),
-          unitnote("Background shading: PM2.5 in 2019 for every block group (light = cleaner, dark = dirtier). Circles: destination block groups, sized by the number of arrivals from the selected origin group. Reading the map: are the circles sitting on light or dark ground?"))),
+          unitnote("Pooled 2011–2019; not affected by the year selector. Background shading: PM2.5 in 2019 for every block group (light = cleaner, dark = dirtier). Circles: destination block groups, sized by the estimated number of arrivals from the selected origin group. Reading the map: are the circles sitting on light or dark ground?"))),
       conditionalPanel("input.me_compare",
         layout_columns(col_widths=c(6,6),
           card(card_header("Destinations of movers from Black-majority origins"), leafletOutput("me_mapA", height="480px")),
           card(card_header("Destinations of movers from white-majority origins"), leafletOutput("me_mapB", height="480px"))),
         unitnote("Same pollution background and the same circle-size scale on both maps.")),
-      card(card_header(textOutput("me_sanktitle")), plotlyOutput("me_sankey", height="380px"),
-        unitnote("Same data as the bar chart, drawn as flows. Hover a ribbon for moves and the mean change in PM2.5 those movers experienced.")),
-      card(card_header("This metro in numbers"), DTOutput("me_table")))
+      if (HAS_TRANS) conditionalPanel("input.me_flowview == 'matrix'",
+        card(card_header(textOutput("me_trtitle")), plotlyOutput("me_trans", height="400px"),
+          unitnote("Each row is the origin's PM2.5 quintile, each column the destination's, both defined over the metro's block groups in the selected year (equal weight per block group, Q5 = dirtiest). Cells give the share of estimated movers from that origin quintile reaching each destination quintile (rows sum to 100%). Hover for mover counts and the mean change in PM2.5. Reading it: compare the same row across the three panels — movers from Q3 Black-majority origins vs Q3 white-majority origins."))) else NULL,
+      conditionalPanel(if (HAS_TRANS) "input.me_flowview == 'sankey'" else "true",
+        card(card_header(textOutput("me_sanktitle")), plotlyOutput("me_sankey", height="380px"),
+          unitnote("Same data as the bar chart, drawn as flows. Hover a ribbon for estimated movers and the mean change in PM2.5 those movers experienced."))),
+      card(card_header("This metro in numbers (pooled 2011–2019)"), DTOutput("me_table")))
   ),
 
   nav_panel("Trace a neighbourhood",
@@ -386,18 +412,23 @@ ui <- page_navbar(
         selectizeInput("od_cbsa", "Metropolitan area", setNames(D$mlist$cbsa, D$mlist$name)),
         selectInput("od_year", "Year", as.character(2011:2019), selected="2019"),
         checkboxGroupInput("od_hl", "Highlight neighbourhoods", c("Majority-Black"="B", "Majority-white"="W", "Majority-Hispanic"="H")),
-        checkboxInput("od_showopp", "After clicking: outline the block groups that were clean AND affordable from the selected origin", TRUE),
-        p(class="small text-muted", "Click any block group on the map to see where the households that left it in the selected year went. Origins are coloured by PM2.5 in that year; destinations appear as circles sized by movers, with lines to the origin (the 400 largest destinations are drawn; the charts and numbers use all of them).")),
+        radioButtons("od_rule", "Affordability screen (benchmark)", if (HAS_RENT) RULES else RULES[RULES != "rent"], selected="3"),
+        p(class="small text-muted", "3× income is the rule used in the paper. In expensive metros it screens out most of the metro; the looser rules and the rent rule show how much the benchmark depends on that choice (paper Table S17)."),
+        checkboxInput("od_showopp", "After clicking: outline the price-screened block groups that are also cleaner than the metro median", TRUE),
+        p(class="small text-muted", "Click any block group on the map to see where the estimated out-movers in the selected year went. Origins are coloured by PM2.5 in that year; destinations appear as circles sized by estimated movers, with lines to the origin (the 400 largest destinations are drawn; the charts and numbers use all of them). The year selector changes everything on this tab."),
+        uiOutput("od_share")),
       card(full_screen=TRUE, card_header(textOutput("od_title")), leafletOutput("od_map", height="600px")),
       layout_columns(col_widths=c(5,7),
         card(card_header("This neighbourhood's movers"), uiOutput("od_summary")),
-        card(card_header("Reachable vs. reached"), plotlyOutput("od_reach", height="340px"),
-          unitnote("Each curve: the share of neighbourhoods (or of movers) at or below a given PM2.5. Grey: every block group in the metro. Blue: the ones affordable to this origin (median home value ≤ 3× its median income — the paper's rule of thumb). Red: where its movers actually went, weighted by movers. Dashed lines: the origin's own PM2.5 and the metro median that defines 'clean'. A red curve to the right of the blue one means movers landed in dirtier places than the affordable set offered."))),
+        card(card_header("Price-screened potential destinations vs. observed destinations"), plotlyOutput("od_reach", height="340px"),
+          unitnote("Each curve: the share at or below a given PM2.5. Grey: every block group in the metro, each counted once. Blue: the block groups that pass the selected affordability screen, each counted once — potential destinations by price, not anyone's actual choices. Red: the observed destinations of this origin's estimated movers, weighted by movers. Dashed lines: the origin's own PM2.5 and the metro median that defines 'cleaner'. A red curve to the right of the blue one means movers landed in dirtier places than the price-screened set offered."))),
       layout_columns(col_widths=c(5,7),
-        card(card_header("Clean and affordable from here"), uiOutput("od_oppset"),
-          unitnote("'Clean' = below the metro's median PM2.5 in that year; 'affordable' = median home value within 3× this origin's median income. A price-based heuristic for reach, not any household's real choice set.")),
+        card(card_header("The benchmark, in numbers"), uiOutput("od_oppset"),
+          unitnote("'Cleaner' = below the metro's median PM2.5 in that year. Block-group counts weight every block group equally; the mover shares weight each destination by its estimated movers. The screened set is a price-based benchmark, not a household's actual choice set.")),
         card(card_header("Where they went: destination PM2.5"), plotlyOutput("od_hist", height="300px"),
-          unitnote("Distribution of movers by their destination's PM2.5 in the same year, with the origin's own PM2.5 marked. Left of the line = reached cleaner air."))))
+          unitnote("Distribution of estimated movers by their destination's PM2.5 in the same year, with the origin's own PM2.5 marked. Left of the line = reached cleaner air."))),
+      card(card_header("Origin quintile → destination quintiles"), plotlyOutput("od_trans", height="300px"),
+        unitnote("The origin's PM2.5 quintile among the metro's block groups in that year, and the share of its estimated movers landing in each destination quintile, compared with all movers leaving the same origin quintile in this metro (from the metro explorer's transition matrix) and with the 20% that each quintile would receive if destinations were spread evenly across the metro's block groups.")))
   ),
 
   nav_panel("6 · Methods & data",
@@ -413,7 +444,8 @@ ui <- page_navbar(
             tags$dt("Conditional avoidance gap"), tags$dd("The difference in exposure reallocation between streams leaving minority-majority and white-majority neighbourhoods that started equally polluted, with the same income, poverty and education, in the same metro and year."),
             tags$dt("Shift-share decomposition"), tags$dd("Splits a change in a group's average exposure into the part due to pollution changing where people already lived and the part due to people changing where they live. The two sum exactly to the total."),
             tags$dt("Gelbach decomposition"), tags$dd("Apportions the change in a coefficient, when extra variables are added to a model, exactly among those variables, independent of the order they are added."),
-            tags$dt("Opportunity set"), tags$dd("Share of a metro's block groups that are both cleaner than the metro median and affordable to a given origin (home value ≤ 3× origin median income). A price-based proxy for reach."),
+            tags$dt("Opportunity set / price-screened potential destinations"), tags$dd("Share of a metro's block groups (each counted once) that are both cleaner than the metro median and pass a price screen relative to a given origin (paper baseline: median home value ≤ 3× origin median income; 4×, 5× and a rent ≤ 30% of income rule are sensitivity checks). A price-based benchmark for reach, not a household's actual choice set; contrast with observed destinations, which are weighted by estimated movers."),
+            tags$dt("Estimated movers"), tags$dd("MIGRATE's model-based expected flows between block groups, estimated from ACS and IRS migration data rather than counted households; often fractional, so an origin can have more destinations than movers."),
             tags$dt("Dissimilarity index"), tags$dd("Share of one group that would have to move for two groups to be evenly distributed across a metro's block groups; 0 = integrated, 1 = complete segregation."),
             tags$dt("Block group"), tags$dd("Census unit of roughly 600–3,000 people; ≈217,000 in the study. Migration PUMA: county-based unit of ≥100,000 people used for the microdata check.")))),
       tagList(
@@ -455,6 +487,8 @@ server <- function(input, output, session) {
   output$me_insight <- renderUI({ req(HAS_METRO, input$me_cbsa); p(metro_insight(input$me_cbsa, me_yr())) })
   output$me_trend <- renderPlotly({ req(HAS_YEAR, input$me_cbsa); ggplotly(p_trend(input$me_cbsa)) |> hleg() })
   output$me_sanktitle <- renderText({ req(input$me_cbsa); sprintf("Flows from origin group to destination pollution quintile, %s", if (me_yr()=="all") "all years" else me_yr()) })
+  output$me_trtitle <- renderText({ req(input$me_cbsa); sprintf("Where movers from each pollution quintile went, by origin group, %s", if (me_yr()=="all") "all years 2011–2019" else me_yr()) })
+  output$me_trans <- renderPlotly({ req(HAS_TRANS, input$me_cbsa); ggplotly(p_transition(input$me_cbsa, me_yr()), tooltip="text") |> layout(margin=list(t=40)) |> config(displaylogo=FALSE, toImageButtonOptions=list(format="png", scale=2)) })
   output$me_gap <- renderUI({ req(HAS_METRO, input$me_cbsa); t <- metro_gap_text(input$me_cbsa); if (is.null(t)) p(class="text-muted small", "Metro-specific adjusted gaps not yet built (scripts/build_app_metro_gaps.R).") else p(strong("Adjusted comparison. "), t) })
   output$me_quint <- renderPlotly({ req(HAS_METRO, input$me_cbsa); ggplotly(p_quint(input$me_cbsa, me_yr()), tooltip="text") |> hleg() })
   output$me_maptitle <- renderText({ req(input$me_cbsa); if (isTRUE(input$me_origins)) "Origin view: average PM2.5 change experienced by households leaving each block group" else sprintf("Where movers from %s went, on this metro's pollution map", c(black="Black-majority origins", white="white-majority origins", hisp="Hispanic-majority origins")[[input$me_grp]]) })
@@ -501,6 +535,8 @@ server <- function(input, output, session) {
             label=~sprintf("%s · %s · PM2.5 %.1f", geoid_bg, mj, pm)) |>
       addLegend("bottomleft", pal=pal, values=b$pm, title=sprintf("PM2.5, %s (µg/m³)", yr), opacity=0.8)
     for (k in input$od_hl) { hb <- b[get(mjc)==k]; if (nrow(hb)) m <- m |> addCircleMarkers(data=hb, lng=~lon, lat=~lat, radius=7, stroke=TRUE, color=c(B=GRP_COL[["Black"]], W=GRP_COL[["White"]], H=GRP_COL[["Hispanic"]])[[k]], weight=1.2, fill=FALSE, opacity=0.6) }
+    sel <- isolate(od_sel())
+    if (!is.null(sel) && BGA[geoid_bg==sel]$cbsa %in% input$od_cbsa) { f <- tryCatch(isolate(od_flows()), error=function(e) NULL); if (!is.null(f)) m <- add_trace(m, f, BGA[geoid_bg==sel], yr) }
     m
   })
   observeEvent(input$od_map_marker_click, { id <- input$od_map_marker_click$id; if (!is.null(id) && grepl("^[0-9]{12}$", id)) od_sel(id) })
@@ -510,65 +546,92 @@ server <- function(input, output, session) {
     f <- merge(f, BGA[, .(dest_bg=geoid_bg, lon, lat, cbsa, pm=get(paste0("pm25_", yr)), mj=MAJ_LAB[get(paste0("maj_", yr))])], by="dest_bg", all.x=TRUE)
     f[order(-flow)]
   })
+  add_trace <- function(m, f, o, yr) {
+    if (!nrow(f)) return(m)
+    fw <- f[!is.na(lon)][order(-flow)][1:min(.N, 400)]        # draw the 400 largest destinations; the summary and charts use all of them
+    for (i in seq_len(min(nrow(fw), 150))) m <- m |> addPolylines(lng=c(o$lon, fw$lon[i]), lat=c(o$lat, fw$lat[i]), weight=pmax(0.5, log1p(fw$flow[i])), color="#444", opacity=0.3, group="trace")
+    fw[, pop := sprintf("<b>Destination %s</b><br>%s<br>Estimated movers: %.1f<br>PM2.5 %s: %.1f µg/m³", dest_bg, mj, flow, yr, pm)]
+    m |> addCircleMarkers(data=fw, lng=~lon, lat=~lat, radius=~pmin(2 + 2*sqrt(flow), 14), stroke=TRUE, color="#B2403A", weight=1.5, fillColor="#B2403A", fillOpacity=0.3, group="trace", popup=~pop) |>
+      addCircleMarkers(lng=o$lon, lat=o$lat, radius=10, stroke=TRUE, color="black", weight=3, fill=FALSE, group="trace")
+  }
   observe({
     f <- od_flows(); o <- BGA[geoid_bg==od_sel()]; yr <- input$od_year; req(nrow(o))
-    proxy <- leafletProxy("od_map") |> clearGroup("trace")
-    if (!nrow(f)) return()
-    fw <- f[!is.na(lon)][order(-flow)][1:min(.N, 400)]        # draw the 400 largest destinations; the summary and charts use all of them
-    for (i in seq_len(min(nrow(fw), 150))) proxy <- proxy |> addPolylines(lng=c(o$lon, fw$lon[i]), lat=c(o$lat, fw$lat[i]), weight=pmax(0.5, log1p(fw$flow[i])), color="#444", opacity=0.3, group="trace")
-    proxy |> addCircleMarkers(data=fw, lng=~lon, lat=~lat, radius=~pmin(2 + 2*sqrt(flow), 14), stroke=TRUE, color="#B2403A", weight=1.5, fillColor="#B2403A", fillOpacity=0.3, group="trace",
-               popup=~sprintf("<b>Destination %s</b><br>%s<br>Movers: %.1f<br>PM2.5 %s: %.1f µg/m³", dest_bg, mj, flow, yr, pm)) |>
-      addCircleMarkers(lng=o$lon, lat=o$lat, radius=10, stroke=TRUE, color="black", weight=3, fill=FALSE, group="trace")
+    leafletProxy("od_map") |> clearGroup("trace") |> add_trace(f, o, yr)
   })
+  od_rule <- reactive({ r <- input$od_rule; if (is.null(r) || !r %in% RULES) "3" else r })
   od_reach <- reactive({
-    req(HAS_OD, od_sel()); yr <- input$od_year; o <- BGA[geoid_bg==od_sel()]; req(nrow(o))
+    req(HAS_OD, od_sel()); yr <- input$od_year; o <- BGA[geoid_bg==od_sel()]; req(nrow(o)); rule <- od_rule()
     inc <- o[[paste0("inc_", yr)]]; metro <- BGA[cbsa==o$cbsa & !is.na(get(paste0("pm25_", yr)))]
     metro[, `:=`(pm=get(paste0("pm25_", yr)), hv=get(paste0("hv_", yr)))]
-    med <- median(metro$pm, na.rm=TRUE)
-    metro[, affordable := !is.na(hv) & !is.na(inc) & hv <= 3*inc]; metro[, clean := pm < med]
-    list(metro=metro[, .(geoid_bg, lon, lat, pm, affordable, clean)], med=med, inc=inc, opm=o[[paste0("pm25_", yr)]])
+    if (rule == "rent") { metro[, rent := get(paste0("rent_", yr))]; metro[, affordable := !is.na(rent) & !is.na(inc) & 12*rent <= 0.30*inc] }
+    else { k <- as.numeric(rule); metro[, affordable := !is.na(hv) & !is.na(inc) & hv <= k*inc] }
+    med <- median(metro$pm, na.rm=TRUE); metro[, clean := pm < med]
+    br <- unique(quantile(metro$pm, probs=seq(0, 1, 0.2))); metro[, q := quint_of(pm, br)]
+    list(metro=metro[, .(geoid_bg, lon, lat, pm, affordable, clean, q)], med=med, inc=inc, opm=o[[paste0("pm25_", yr)]], oq=quint_of(o[[paste0("pm25_", yr)]], br), rule=rule,
+         n_all=nrow(metro), n_aff=sum(metro$affordable), n_ca=sum(metro$affordable & metro$clean))
   })
   observe({ r <- od_reach(); proxy <- leafletProxy("od_map") |> clearGroup("oppset"); if (isTRUE(input$od_showopp)) { ca <- r$metro[affordable & clean]; if (nrow(ca)) proxy |> addCircleMarkers(data=ca, lng=~lon, lat=~lat, radius=6, stroke=TRUE, color="#2E8B57", weight=1.5, fill=FALSE, opacity=0.8, group="oppset") } })
   output$od_reach <- renderPlotly({
     r <- od_reach(); f <- od_flows()[!is.na(pm)]; req(nrow(f))
     ecdf_w <- function(x, w) { o <- order(x); x <- x[o]; w <- w[o]; data.table(pm=x, share=cumsum(w)/sum(w)) }
-    d <- rbind(cbind(set="All neighbourhoods in the metro", ecdf_w(r$metro$pm, rep(1, nrow(r$metro)))),
-               cbind(set="Affordable to this origin", ecdf_w(r$metro[affordable==TRUE]$pm, rep(1, sum(r$metro$affordable)))),
-               cbind(set="Where its movers went", ecdf_w(f$pm, f$flow)))
-    d[, set := factor(set, levels=c("All neighbourhoods in the metro","Affordable to this origin","Where its movers went"))]
+    lv <- c("All block groups in the metro (each counted once)", "Price-screened potential destinations (each counted once)", "Observed destinations (weighted by estimated movers)")
+    d <- rbind(cbind(set=lv[1], ecdf_w(r$metro$pm, rep(1, nrow(r$metro)))),
+               if (r$n_aff > 0) cbind(set=lv[2], ecdf_w(r$metro[affordable==TRUE]$pm, rep(1, r$n_aff))) else NULL,
+               cbind(set=lv[3], ecdf_w(f$pm, f$flow)))
+    d[, set := factor(set, levels=lv)]
     g <- ggplot(d, aes(pm, 100*share, colour=set)) + geom_step(linewidth=1.1) +
       geom_vline(xintercept=r$opm, linetype=2, colour="grey30") + geom_vline(xintercept=r$med, linetype=3, colour="#2E8B57") +
-      annotate("text", x=r$opm, y=5, label="origin", hjust=-0.1, colour="grey30", size=3.5) + annotate("text", x=r$med, y=95, label="metro median ('clean')", hjust=-0.05, colour="#2E8B57", size=3.5) +
-      scale_colour_manual(values=c(`All neighbourhoods in the metro`="grey55", `Affordable to this origin`="#3B6FA0", `Where its movers went`="#B2403A")) +
-      labs(x=sprintf("PM2.5, %s (µg/m³)", input$od_year), y="% at or below this level", colour=NULL) + theme_app()
+      annotate("text", x=r$opm, y=5, label="origin", hjust=-0.1, colour="grey30", size=3.5) + annotate("text", x=r$med, y=95, label="metro median ('cleaner')", hjust=-0.05, colour="#2E8B57", size=3.5) +
+      scale_colour_manual(values=setNames(c("grey55", "#3B6FA0", "#B2403A"), lv)) +
+      labs(x=sprintf("PM2.5, %s (µg/m³)", input$od_year), y="% at or below this level", colour=NULL, subtitle=if (r$n_aff/r$n_all < SMALL_SET) sprintf("Only %.1f%% of the metro passes the %s screen — benchmark unreliable", 100*r$n_aff/r$n_all, if (r$rule=="rent") "rent" else paste0(r$rule, "×")) else NULL) + theme_app()
     ggplotly(g) |> hleg()
   })
   output$od_oppset <- renderUI({
     r <- od_reach(); f <- od_flows(); req(nrow(f))
-    m <- r$metro; n_all <- nrow(m); n_aff <- sum(m$affordable); n_ca <- sum(m$affordable & m$clean)
+    m <- r$metro; n_all <- r$n_all; n_aff <- r$n_aff; n_ca <- r$n_ca
     fk <- merge(f, m[, .(dest_bg=geoid_bg, affordable, clean)], by="dest_bg", all.x=TRUE)
     s_ca <- sum(fk$flow[fk$affordable & fk$clean], na.rm=TRUE)/sum(fk$flow); s_cl <- sum(fk$flow[fk$clean], na.rm=TRUE)/sum(fk$flow); s_af <- sum(fk$flow[fk$affordable], na.rm=TRUE)/sum(fk$flow)
+    small <- !is.na(r$inc) && n_aff/n_all < SMALL_SET
     tagList(
-      p(if (is.na(r$inc)) "Origin median income not available for this year, so the affordable set cannot be computed." else sprintf("Origin median household income: $%s. Of the metro's %s block groups, %s (%.0f%%) had a median home value within 3× that income, and %s (%.0f%%) were both affordable and cleaner than the metro median.",
+      p(strong("Screen: "), RULE_LAB[[r$rule]], if (r$rule == "3") " — the rule used in the paper." else " — a sensitivity check; the paper's baseline is 3×."),
+      if (small) div(class="alert alert-warning small py-2", bs_icon("exclamation-triangle"), sprintf(" Only %s of the metro's %s block groups (%.1f%%) pass this screen. A set this small is not a meaningful benchmark for where movers could have gone; try a looser multiple or the rent rule. The 3× rule is kept as the paper's baseline for comparability.", format(n_aff, big.mark=","), format(n_all, big.mark=","), 100*n_aff/n_all)) else NULL,
+      p(strong("Block groups, each counted once. "), if (is.na(r$inc)) "Origin median income is not available for this year, so the screened set cannot be computed." else sprintf("Origin median household income: $%s. Of the metro's %s block groups, %s (%.1f%%) pass the screen and %s (%.1f%%) are also cleaner than the metro median. These are price-screened potential destinations — a benchmark, not any household's actual choices.",
           format(r$inc, big.mark=","), format(n_all, big.mark=","), format(n_aff, big.mark=","), 100*n_aff/n_all, format(n_ca, big.mark=","), 100*n_ca/n_all)),
-      tags$ul(tags$li(sprintf("%.0f%% of its movers went somewhere cleaner than the metro median.", 100*s_cl)),
-              tags$li(sprintf("%.0f%% went somewhere affordable by this rule; %.0f%% went somewhere both clean and affordable.", 100*s_af, 100*s_ca)),
-              tags$li(if (n_ca/n_all > 0 && s_ca < n_ca/n_all) sprintf("Clean-and-affordable neighbourhoods were %.0f%% of the metro but received %.0f%% of these movers.", 100*n_ca/n_all, 100*s_ca) else sprintf("Clean-and-affordable neighbourhoods were %.0f%% of the metro and received %.0f%% of these movers.", 100*n_ca/n_all, 100*s_ca))),
-      p(class="text-muted small", "Green outlines on the map mark the clean-and-affordable set."))
+      p(strong("Observed destinations, weighted by estimated movers. ")),
+      tags$ul(tags$li(sprintf("%.0f%% of this origin's estimated movers went somewhere cleaner than the metro median.", 100*s_cl)),
+              tags$li(sprintf("%.0f%% went to a block group that passes the screen; %.0f%% to one that is both screened-in and cleaner.", 100*s_af, 100*s_ca)),
+              tags$li(sprintf("Screened-in, cleaner block groups are %.1f%% of the metro's block groups and received %.0f%% of these movers%s.", 100*n_ca/n_all, 100*s_ca, if (n_ca/n_all > 0 && s_ca < n_ca/n_all) " — less than their share" else if (n_ca > 0) " — at least their share" else ""))),
+      p(class="text-muted small", "Green outlines on the map mark the screened-in, cleaner-than-median block groups."))
+  })
+  output$od_trans <- renderPlotly({
+    r <- od_reach(); f <- od_flows()[!is.na(pm) & cbsa == BGA[geoid_bg==od_sel()]$cbsa]; req(nrow(f)); yr <- input$od_year
+    f <- merge(f, r$metro[, .(dest_bg=geoid_bg, q)], by="dest_bg", all.x=TRUE); f <- f[!is.na(q)]
+    d <- f[, .(share=sum(flow)), by=q][, share := share/sum(share)]; d <- merge(data.table(q=1:5), d, by="q", all.x=TRUE); d[is.na(share), share := 0]; d[, set := "This origin's estimated movers (within metro)"]
+    cb <- BGA[geoid_bg==od_sel()]$cbsa
+    if (HAS_TRANS && cb %in% D$mtr$cbsa) {
+      t <- D$mtr[cbsa==cb & year==yr & orig_q==paste0("Q", r$oq), .(share=sum(moves)), by=.(q=as.integer(sub("Q","",dest_q)))][, share := share/sum(share)]
+      t <- merge(data.table(q=1:5), t, by="q", all.x=TRUE); t[is.na(share), share := 0]; t[, set := sprintf("All movers from %s origins in this metro, %s", QLAB[r$oq], yr)]; d <- rbind(d, t) }
+    d <- rbind(d, data.table(q=1:5, share=0.2, set="Even spread over the metro's block groups"))
+    d[, `:=`(set=factor(set, levels=unique(set)), dest_q=factor(QLAB[q], levels=QLAB))]
+    g <- ggplot(d, aes(dest_q, 100*share, fill=set, text=sprintf("%s<br>%s: %.0f%%", set, dest_q, 100*share))) + geom_col(position=position_dodge(width=0.8), width=0.75) +
+      scale_fill_manual(values=c("#B2403A", "#7A7A7A", "#cfcfcf")) +
+      labs(x=sprintf("Destination PM2.5 quintile (origin is in %s)", QLAB[r$oq]), y="% of estimated within-metro movers", fill=NULL) + theme_app()
+    ggplotly(g, tooltip="text") |> hleg()
   })
   output$od_summary <- renderUI({
     req(HAS_OD, od_sel()); f <- od_flows(); o <- BGA[geoid_bg==od_sel()]; yr <- input$od_year
     opm <- o[[paste0("pm25_", yr)]]; omj <- MAJ_LAB[o[[paste0("maj_", yr)]]]
-    if (!nrow(f)) return(p("No flows of one or more expected movers recorded for this block group in this year."))
+    if (!nrow(f)) return(p("No estimated out-flows recorded for this block group in this year."))
     tot <- sum(f$flow); fk <- f[!is.na(pm)]; dpm <- weighted.mean(fk$pm, fk$flow); within <- sum(f$flow[f$cbsa==o$cbsa], na.rm=TRUE)/tot
     cleaner <- sum(fk$flow[fk$pm < opm])/sum(fk$flow); same <- sum(fk$flow[fk$mj==omj], na.rm=TRUE)/sum(fk$flow)
     tagList(
       p(strong(sprintf("Block group %s", od_sel())), sprintf(" — %s, PM2.5 %.1f µg/m³ in %s.", omj, opm, yr)),
       tags$ul(
-        tags$li(sprintf("%s expected movers left in %s, spread over %s destination block groups (the largest %d account for %.0f%%).", format(round(tot), big.mark=","), yr, format(nrow(f), big.mark=","), min(nrow(f), 50), 100*sum(f$flow[1:min(nrow(f),50)])/tot)),
+        tags$li(sprintf("%s estimated movers left in %s, spread over %s destination block groups (the largest %d account for %.0f%%). ", format(round(tot), big.mark=","), yr, format(nrow(f), big.mark=","), min(nrow(f), 50), 100*sum(f$flow[1:min(nrow(f),50)])/tot),
+                tooltip(bs_icon("question-circle"), "Why more destinations than movers? MIGRATE estimates flows statistically from ACS and IRS migration data rather than counting individual households, so an origin can send 0.3 of an expected mover to a destination. Summing those fractions gives the expected number of movers; the number of destinations with any positive expected flow can exceed it.", placement="right")),
         tags$li(sprintf("Their destinations averaged %.1f µg/m³ — %s than the origin by %.2f.", dpm, if (dpm < opm) "cleaner" else "dirtier", abs(dpm-opm))),
         tags$li(sprintf("%.0f%% reached cleaner air than they left; %.0f%% stayed within the same metro; %.0f%% went to another %s neighbourhood.", 100*cleaner, 100*within, 100*same, tolower(sub(" \\(NH\\)", "", omj))))),
-      p(class="text-muted small", "Expected movers are MIGRATE's model-based estimates, spread over many destinations and often fractional; totals are sums of those expectations."))
+      p(class="text-muted small", "Estimated movers are MIGRATE's model-based expected flows, spread over many destinations and often fractional; totals are sums of those expectations. Characteristics (majority group, income) describe the origin and destination neighbourhoods, not the individual movers."))
   })
   output$od_hist <- renderPlotly({
     req(HAS_OD, od_sel()); f <- od_flows()[!is.na(pm)]; o <- BGA[geoid_bg==od_sel()]; opm <- o[[paste0("pm25_", input$od_year)]]; req(nrow(f))
@@ -576,6 +639,54 @@ server <- function(input, output, session) {
       annotate("text", x=opm, y=Inf, label="origin", vjust=1.5, hjust=-0.1, colour="#B2403A") + labs(x=sprintf("Destination PM2.5, %s (µg/m³)", input$od_year), y="Movers") + theme_app()
     ggplotly(g) |> hleg()
   })
+
+  # ---- shareable URLs: the query string mirrors the current view and is applied on load ----
+  TABS <- c(start="Start here", q1="1 · Did air get cleaner?", q2="2 · Did moving help?", q3="3 · Who reached cleaner air?", q4="4 · Why might this happen?", metro="5 · Explore your city", trace="Trace a neighbourhood", methods="6 · Methods & data")
+  qs_state <- reactive({
+    tab <- names(TABS)[match(input$main, TABS)]; if (is.na(tab)) tab <- "start"
+    q <- list(tab=tab)
+    if (tab == "q1") q <- c(q, list(poll=input$tr_poll, view=input$tr_view))
+    if (tab == "q2") q <- c(q, list(poll=input$dc_poll))
+    if (tab == "q3") q <- c(q, list(fe=input$cg_fe))
+    if (tab == "q4") q <- c(q, list(group=input$mp_group))
+    if (tab == "metro" && HAS_METRO) q <- c(q, list(metro=input$me_cbsa, grp=input$me_grp, year=if (HAS_YEAR) input$me_year else NULL, hl=paste(input$me_hl, collapse=","), view=if (HAS_TRANS) input$me_flowview else NULL))
+    if (tab == "trace" && HAS_OD) q <- c(q, list(metro=input$od_cbsa, year=input$od_year, origin=od_sel(), rule=od_rule(), hl=paste(input$od_hl, collapse=","), opp=as.integer(isTRUE(input$od_showopp))))
+    q <- lapply(q, as.character); q <- q[!sapply(q, function(v) !length(v) || !nzchar(v[1]))]
+    paste0("?", paste(names(q), sapply(q, function(v) utils::URLencode(v[1], reserved=TRUE)), sep="=", collapse="&"))
+  })
+  observe({ updateQueryString(qs_state(), mode="replace", session=session) })
+  share_url <- reactive({ cd <- session$clientData; paste0(cd$url_protocol, "//", cd$url_hostname, if (nzchar(cd$url_port)) paste0(":", cd$url_port) else "", cd$url_pathname, qs_state()) })
+  share_ui <- function(url) tagList(hr(), p(class="small mb-1", strong("Link to this view")), tags$div(class="input-group input-group-sm",
+    tags$input(type="text", class="form-control", readonly=NA, value=url, onclick="this.select()"),
+    tags$button(class="btn btn-outline-secondary", type="button", onclick=sprintf("navigator.clipboard.writeText('%s'); this.innerText='Copied'", url), "Copy")),
+    p(class="small text-muted", "The address bar updates as you change the view, so you can also copy it from there."))
+  output$me_share <- renderUI({ req(HAS_METRO); share_ui(share_url()) })
+  output$od_share <- renderUI({ req(HAS_OD); share_ui(share_url()) })
+  apply_query <- function(q) {
+    if (!is.null(q$tab) && q$tab %in% names(TABS)) nav_select("main", TABS[[q$tab]])
+    if (!is.null(q$poll) && q$poll %in% POLL) { updateSelectInput(session, "tr_poll", selected=q$poll); updateSelectInput(session, "dc_poll", selected=q$poll) }
+    if (!is.null(q$view) && q$view %in% c("level","ratio","gap")) updateRadioButtons(session, "tr_view", selected=q$view)
+    if (!is.null(q$fe) && q$fe %in% c("cbsa","county","none")) updateRadioButtons(session, "cg_fe", selected=q$fe)
+    if (!is.null(q$group) && q$group %in% c("Black","Hispanic")) updateRadioButtons(session, "mp_group", selected=q$group)
+    hl <- if (!is.null(q$hl)) intersect(strsplit(q$hl, ",")[[1]], c("B","W","H")) else NULL
+    if (identical(q$tab, "metro") && HAS_METRO) {
+      if (!is.null(q$metro) && q$metro %in% D$mlist$cbsa) updateSelectizeInput(session, "me_cbsa", selected=q$metro)
+      if (!is.null(q$grp) && q$grp %in% c("black","white","hisp")) updateRadioButtons(session, "me_grp", selected=q$grp)
+      if (HAS_YEAR && !is.null(q$year) && q$year %in% c("all", 2011:2019)) updateSelectInput(session, "me_year", selected=q$year)
+      if (!is.null(hl)) updateCheckboxGroupInput(session, "me_hl", selected=hl)
+      if (HAS_TRANS && !is.null(q$view) && q$view %in% c("matrix","sankey")) updateRadioButtons(session, "me_flowview", selected=q$view)
+    }
+    if (identical(q$tab, "trace") && HAS_OD) {
+      if (!is.null(q$year) && q$year %in% 2011:2019) updateSelectInput(session, "od_year", selected=q$year)
+      if (!is.null(q$rule) && q$rule %in% RULES) updateRadioButtons(session, "od_rule", selected=q$rule)
+      if (!is.null(hl)) updateCheckboxGroupInput(session, "od_hl", selected=hl)
+      if (!is.null(q$opp)) updateCheckboxInput(session, "od_showopp", value=q$opp == "1")
+      cb <- q$metro
+      if (!is.null(q$origin) && grepl("^[0-9]{12}$", q$origin) && q$origin %in% BGA$geoid_bg) { od_sel(q$origin); cb <- BGA[geoid_bg==q$origin]$cbsa }
+      if (!is.null(cb) && cb %in% D$mlist$cbsa) updateSelectizeInput(session, "od_cbsa", selected=cb)
+    }
+  }
+  observeEvent(session$clientData$url_search, { q <- parseQueryString(session$clientData$url_search); if (length(q)) apply_query(q) }, once=TRUE)
 
   tb <- reactive({ req(input$tb_file); fread(file.path("data", input$tb_file)) })
   output$tb_dt <- renderDT(datatable(tb(), options=list(pageLength=15, scrollX=TRUE), rownames=FALSE) |> formatRound(names(tb())[sapply(tb(), is.numeric)], 4))
